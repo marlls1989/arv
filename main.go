@@ -13,7 +13,13 @@ func main() {
 
 	fmt.Printf("RISC-V QDI Model version %s\n", model.Version)
 
-	file, err := os.OpenFile("memdump", os.O_RDWR, 0)
+	file, err := os.OpenFile("memdump", os.O_RDWR|os.O_CREATE, 0666)
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(-1)
+	}
+
+	file.Truncate(4096)
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(-1)
