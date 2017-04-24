@@ -11,7 +11,7 @@ type memory struct {
 	mux sync.Mutex
 }
 
-func InitializeMemoryFromFile(file *os.File) (*memory, error) {
+func initializeMemoryFromFile(file *os.File) (*memory, error) {
 	ret := new(memory)
 
 	memory, err :=
@@ -22,36 +22,29 @@ func InitializeMemoryFromFile(file *os.File) (*memory, error) {
 	return ret, err
 }
 
-func (s *modelState) memoryReadPort(addr chan uint32, data chan []byte, len uint32) {
+func (s *modelState) memoryReadPort(addr, len <-chan uint32, data chan<- []byte) {
 	go func() {
-		for {
-			select {
-			case a := <-addr:
-				s.memory.mux.Lock()
-				data <- s.memory.mem[a : a+len]
-				s.memory.mux.Unlock()
-			case <-s.quit:
-				return
-			}
+		defer close(data)
+
+		for a := range addr {
+			s.memory.mux.Lock()
+			data <- s.memory.mem[a : a+<-len]
+			s.memory.mux.Unlock()
 		}
 	}()
+
 }
 
-func (s *modelState) memoryWritePort(addr chan uint32, data chan []byte) {
+func (s *modelState) memoryWritePort(addr <-chan uint32, data <-chan []byte) {
 	go func() {
 		defer s.memory.mem.Sync(gommap.MS_ASYNC)
-		for {
-			select {
-			case a := <-addr:
-				s.memory.mux.Lock()
-				d := <-data
-				for i, b := range d {
-					s.memory.mem[a+uint32(i)] = b
-				}
-				s.memory.mux.Unlock()
-			case <-s.quit:
-				return
+
+		for a := range addr {
+			s.memory.mux.Lock()
+			for i, b := range <-data {
+				s.memory.mem[a+uint32(i)] = b
 			}
+			s.memory.mux.Unlock()
 		}
 	}()
 }

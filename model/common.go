@@ -3,6 +3,7 @@ package model
 const Version string = "0.1"
 
 type modelState struct {
-	memory *memory
-	quit   chan bool
+	start, quit chan struct{}
+	memory      *memory
+	startPC     uint32
 }
