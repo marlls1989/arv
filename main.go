@@ -25,12 +25,4 @@ func main() {
 		os.Exit(-1)
 	}
 
-	mem, err := model.InitializeMemoryFromFile(file)
-
-	if err != nil {
-		fmt.Println(err)
-		os.Exit(-1)
-	}
-
-	fmt.Println(mem)
 }
