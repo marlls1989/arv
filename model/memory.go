@@ -29,7 +29,7 @@ func (s *Model) memoryReadPort(addr, len <-chan uint32, data chan<- []byte) {
 		if lv {
 			for a := range addr {
 				s.memory.mux.Lock()
-				d := s.memory.mem[a : a+<-len]
+				d := s.memory.mem[a : a+l]
 				s.memory.mux.Unlock()
 				data <- d
 			}
