@@ -26,11 +26,13 @@ func (s *Model) pipeElement(in interface{}, out ...interface{}) {
 		log.Panicln("`pipeElement` should contain at least one output argument")
 	}
 
-	if vin.Type().Kind() != reflect.Chan {
-		log.Panic("`in` must be a channel")
-	}
+	inputIsChannel := false
+	chType := vin.Type()
 
-	chType := vin.Type().Elem()
+	if chType.Kind() == reflect.Chan {
+		chType = chType.Elem()
+		inputIsChannel = true
+	}
 
 	for i := 0; i < outLen; i++ {
 		to := vout.Index(i).Type()
@@ -46,36 +48,37 @@ func (s *Model) pipeElement(in interface{}, out ...interface{}) {
 			defer ov.Close()
 		}
 
-		for {
-			a, ok := vin.Recv()
-			if ok {
-				for i := 0; i < outLen; i++ {
-					ov := vout.Index(i)
-					ov.Send(a)
+		if inputIsChannel {
+			for {
+				a, ok := vin.Recv()
+				if ok {
+					for i := 0; i < outLen; i++ {
+						ov := vout.Index(i)
+						ov.Send(a)
+					}
+				} else {
+					return
 				}
-			} else {
-				return
 			}
-		}
-	}()
-}
+		} else {
+			var cases []reflect.SelectCase
 
-func (s *Model) constElement(out chan<- interface{}, val interface{}) {
-	outType := reflect.TypeOf(out)
-	valType := reflect.TypeOf(val)
+			cases[0] = reflect.SelectCase{
+				Chan: reflect.ValueOf(s.quit),
+				Dir:  reflect.SelectRecv}
 
-	if outType.Elem() != valType {
-		log.Panicf("`out` channel type must match `val` type %s, but got %s",
-			valType.Kind(), outType.Elem().Kind())
-	}
+			for i := 0; i < outLen; i++ {
+				cases[i+1] = reflect.SelectCase{
+					Chan: vout.Index(i),
+					Dir:  reflect.SelectSend,
+					Send: vin}
+			}
 
-	go func() {
-		defer close(out)
-		for {
-			select {
-			case <-s.quit:
-				return
-			case out <- val:
+			for {
+				_, _, ok := reflect.Select(cases)
+				if !ok {
+					return
+				}
 			}
 		}
 	}()
