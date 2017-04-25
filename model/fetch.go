@@ -40,13 +40,22 @@ func (s *Model) nextPcUnit(
 func (s *Model) fetchUnit(
 	branch <-chan bool,
 	branchAddr <-chan uint32,
-	fetchAddr, pcAddr chan<- uint32,
+	pcAddr chan<- uint32,
+	instruction chan<- []byte,
 	valid chan<- bool) {
 
 	nextPC := make(chan uint32)
 	currPC := make(chan uint32)
+	fetchAddr := make(chan uint32)
 	nextValid := make(chan bool)
 	currValid := make(chan bool)
+	len := make(chan uint32)
 
-	//s.forkElement(nextPC, currPC, pcAddr)
+	s.nextPcUnit(currPC, branchAddr, currValid, branch, fetchAddr, nextPC, nextValid)
+
+	s.pipeElement(nextPC, currPC, fetchAddr)
+	s.pipeElement(nextValid, currValid, valid)
+	s.pipeElement(uint32(4), len)
+
+	s.memoryReadPort(fetchAddr, len, instruction)
 }
