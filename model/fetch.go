@@ -1,15 +1,9 @@
 package model
 
-type branchCommandT struct {
-	address uint32
-	branch  bool
-}
-
-func (s *modelState) nextPcUnit(
-	cmd <-chan branchCommandT,
-	currPC <-chan uint32,
-	currValid <-chan bool,
-	fetchAddr, nextPc, fetchLen chan<- uint32,
+func (s *Model) nextPcUnit(
+	currPC, branchAddr <-chan uint32,
+	currValid, branch <-chan bool,
+	fetchAddr, nextPc chan<- uint32,
 	nextValid chan<- bool) {
 
 	go func() {
@@ -17,37 +11,42 @@ func (s *modelState) nextPcUnit(
 		defer close(fetchAddr)
 		defer close(nextPc)
 		defer close(nextValid)
-		defer close(fetchLen)
 
 		<-s.start
 		nextPc <- s.startPC
 		fetchAddr <- s.startPC
-		fetchLen <- 4
-		for pc := range currPC {
+		for br := range branch {
 			var target uint32
-			c := <-cmd
 			valid := <-currValid
-			if c.branch {
-				target = c.address
-				valid = !valid
+			pc := <-currPC
+			if br {
+				brt, vbrt := <-branchAddr
+				if vbrt {
+					target = brt
+					valid = !valid
+				} else {
+					return
+				}
 			} else {
 				target = pc + 4
 			}
 			fetchAddr <- target
 			nextPc <- target
 			nextValid <- valid
-			fetchLen <- 4
 		}
 	}()
 }
 
-func (s *modelState) pcUnit(
-	nextPC <-chan uint32,
-	nextValid <-chan bool,
-	currPc, pcOut chan<- uint32,
-	currValid, validOut chan<- bool) {
+func (s *Model) fetchUnit(
+	branch <-chan bool,
+	branchAddr <-chan uint32,
+	fetchAddr, pcAddr chan<- uint32,
+	valid chan<- bool) {
 
-}
+	nextPC := make(chan uint32)
+	currPC := make(chan uint32)
+	nextValid := make(chan bool)
+	currValid := make(chan bool)
 
-func (s *modelState) fetchUnit(cmd <-chan branchCommandT, fetchAddr chan<- uint32) {
+	//s.forkElement(nextPC, currPC, pcAddr)
 }
