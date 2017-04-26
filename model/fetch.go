@@ -53,7 +53,7 @@ func (s *Model) fetchUnit(
 
 	s.nextPcUnit(currPC, branchAddr, currValid, branch, fetchAddr, nextPC, nextValid)
 
-	s.pipeElement(nextPC, currPC, fetchAddr)
+	s.pipeElement(nextPC, currPC, pcAddr)
 	s.pipeElement(nextValid, currValid, valid)
 	s.pipeElement(uint32(4), len)
 

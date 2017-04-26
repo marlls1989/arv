@@ -25,16 +25,16 @@ func initializeMemoryFromFile(file *os.File) (*memory, error) {
 func (s *Model) memoryReadPort(addr, len <-chan uint32, data chan<- []byte) {
 	go func() {
 		defer close(data)
-		l, lv := <-len
-		if lv {
-			for a := range addr {
+		for a := range addr {
+			l, lv := <-len
+			if lv {
 				s.memory.mux.Lock()
 				d := s.memory.mem[a : a+l]
 				s.memory.mux.Unlock()
 				data <- d
+			} else {
+				return
 			}
-		} else {
-			return
 		}
 	}()
 
