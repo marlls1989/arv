@@ -22,15 +22,15 @@ func initializeMemoryFromFile(file *os.File) (*memory, error) {
 	return ret, err
 }
 
-func (s *Model) memoryReadPort(addr, len <-chan uint32, data chan<- []byte) {
+func (m *memory) ReadPort(addr, len <-chan uint32, data chan<- []byte) {
 	go func() {
 		defer close(data)
 		for a := range addr {
 			l, lv := <-len
 			if lv {
-				s.memory.mux.Lock()
-				d := s.memory.mem[a : a+l]
-				s.memory.mux.Unlock()
+				m.mux.Lock()
+				d := m.mem[a : a+l]
+				m.mux.Unlock()
 				data <- d
 			} else {
 				return
@@ -40,18 +40,18 @@ func (s *Model) memoryReadPort(addr, len <-chan uint32, data chan<- []byte) {
 
 }
 
-func (s *Model) memoryWritePort(addr <-chan uint32, data <-chan []byte) {
+func (m *memory) WritePort(addr <-chan uint32, data <-chan []byte) {
 	go func() {
-		defer s.memory.mem.Sync(gommap.MS_ASYNC)
+		defer m.mem.Sync(gommap.MS_ASYNC)
 
 		for a := range addr {
 			d, dv := <-data
 			if dv {
-				s.memory.mux.Lock()
+				m.mux.Lock()
 				for i, b := range d {
-					s.memory.mem[a+uint32(i)] = b
+					m.mem[a+uint32(i)] = b
 				}
-				s.memory.mux.Unlock()
+				m.mux.Unlock()
 			} else {
 				return
 			}
