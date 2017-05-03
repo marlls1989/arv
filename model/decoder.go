@@ -5,7 +5,6 @@ import (
 )
 
 type xuSelector uint8
-type regAddr uint32
 type opFormat uint8
 type xuOperation uint8
 
@@ -63,9 +62,7 @@ func (s *Model) decoderUnit(
 	validOut chan<- bool,
 	instructionOut, pcAddrOut chan<- uint32,
 	xuOper chan<- xuOperation,
-	opFmt chan<- opFormat,
-	regAaddr chan<- uint32,
-	rebBaddr chan<- uint32) {
+	opFmt chan<- opFormat) {
 
 	go func() {
 		defer close(validOut)
@@ -93,12 +90,14 @@ func (s *Model) decoderUnit(
 		defer close(xuOper)
 
 		<-s.start
-		instructionOut <- 0x13
+		instructionOut <- 0
 		opFmt <- opFormatI
+		xuOper <- bypassA
 		for i := range instructionIn {
+			var fmt opFormat
+			var op xuOperation
+
 			ins := binary.LittleEndian.Uint32(i)
-			fmt := opFormatI
-			op := bypassA
 
 			switch ins & 0x7F {
 			case 0x13, 0x67, 0x03:
