@@ -57,5 +57,5 @@ func (s *Model) fetchUnit(
 	s.pipeElement(nextValid, currValid, valid)
 	s.pipeElement(uint32(4), len)
 
-	s.memoryReadPort(fetchAddr, len, instruction)
+	s.memory.ReadPort(fetchAddr, len, instruction)
 }
