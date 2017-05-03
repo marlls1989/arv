@@ -4,7 +4,6 @@ import (
 	"encoding/binary"
 )
 
-type xuSelector uint8
 type opFormat uint8
 type xuOperation uint8
 
@@ -35,15 +34,6 @@ const (
 	branchLTU             = 0x56
 	branchGEU             = 0x57
 	branchJL              = 0x58
-)
-
-const (
-	xuBypassSel xuSelector = 0x00
-	xuAdderSel             = 0x01
-	xuLogicSel             = 0x02
-	xuShiftSel             = 0x03
-	xuMemorySel            = 0x04
-	xuBranchSel            = 0x05
 )
 
 const (
