@@ -5,7 +5,7 @@ import (
 )
 
 func (s *Model) reglockStage(
-	fifoIn <-chan uint32,
+	fifoIn, lockIn <-chan uint32,
 	fifoOut, lockOut chan<- uint32) {
 
 	go func() {
@@ -16,8 +16,12 @@ func (s *Model) reglockStage(
 		lockOut <- 0
 		fifoOut <- 0
 		for in := range fifoIn {
-			lockOut <- in
+			l, lv := <-lockIn
+			if !lv {
+				return
+			}
 			fifoOut <- in
+			lockOut <- (in | l) & 0xFFFFFFFE
 		}
 	}()
 }
@@ -42,28 +46,13 @@ func (s *Model) registerLock(
 		lock[i] = make(chan uint32)
 	}
 
-	s.reglockStage(fifoIn, fifo[0], lock[0])
+	s.pipeElement(uint32(0), lock[0])
+
+	s.reglockStage(fifoIn, lock[0], fifo[0], lock[1])
 
 	for i := 1; i < stages-1; i++ {
-		s.reglockStage(fifo[i-1], fifo[i], lock[i])
+		s.reglockStage(fifo[i-1], lock[i], fifo[i], lock[i+1])
 	}
 
-	s.reglockStage(fifo[stages-2], fifoOut, lock[stages-1])
-
-	go func() {
-		var h uint32
-		defer close(lockedRegisters)
-
-		for {
-			h = 0
-			for _, l := range lock {
-				a, va := <-l
-				if !va {
-					return
-				}
-				h |= a
-			}
-			lockedRegisters <- h & 0xFFFFFFFE
-		}
-	}()
+	s.reglockStage(fifo[stages-2], lock[stages-1], fifoOut, lockedRegisters)
 }
