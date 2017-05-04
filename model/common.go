@@ -14,7 +14,7 @@ type Model struct {
 	startPC     uint32
 }
 
-func encodeOneHot32(val []uint) (ret uint32) {
+func encodeOneHot32(val ...uint) (ret uint32) {
 	ret = 0
 	for _, v := range val {
 		ret |= 1 << (v & 0x1F)

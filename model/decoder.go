@@ -52,7 +52,8 @@ func (s *Model) decoderUnit(
 	validOut chan<- bool,
 	instructionOut, pcAddrOut chan<- uint32,
 	xuOper chan<- xuOperation,
-	opFmt chan<- opFormat) {
+	opFmt chan<- opFormat,
+	regA, regB, regD chan<- uint32) {
 
 	go func() {
 		defer close(validOut)
@@ -78,11 +79,17 @@ func (s *Model) decoderUnit(
 		defer close(instructionOut)
 		defer close(opFmt)
 		defer close(xuOper)
+		defer close(regA)
+		defer close(regB)
+		defer close(regD)
 
 		<-s.start
 		instructionOut <- 0
-		opFmt <- opFormatI
+		opFmt <- opFormatU
 		xuOper <- bypassA
+		regA <- 0
+		regB <- 0
+		regD <- 0
 		for i := range instructionIn {
 			var fmt opFormat
 			var op xuOperation
@@ -181,9 +188,16 @@ func (s *Model) decoderUnit(
 				}
 			}
 
+			ra := encodeOneHot32((uint)((ins >> 15) & 0x1F))
+			rb := encodeOneHot32((uint)((ins >> 20) & 0x1F))
+			rd := encodeOneHot32((uint)((ins >> 7) & 0x1F))
+
+			instructionOut <- ins
 			opFmt <- fmt
 			xuOper <- op
-			instructionOut <- ins
+			regA <- ra
+			regB <- rb
+			regD <- rd
 		}
 	}()
 }
