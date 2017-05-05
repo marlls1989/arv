@@ -91,9 +91,11 @@ func (s *Model) operandFetchUnit(
 				a = <-regAdata
 				b = (uint32)((int32)(ins) >> 20)
 			case opFormatU:
+				<-regLock
 				a = pc
 				b = ins & 0xFFFFF000
 			case opFormatJ:
+				<-regLock
 				a = pc
 				b = (((uint32)((int32)(ins)>>12) & 0xFFF00000) |
 					(ins & 0x000FF000) |
