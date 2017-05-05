@@ -31,7 +31,7 @@ func (s *Model) operandFetchUnit(
 		<-s.start
 		validOut <- false
 		pcAddrOut <- 0
-		xuOperOut <- bypassA
+		xuOperOut <- bypassB
 		operandA <- 0
 		operandB <- 0
 		operandC <- 0
@@ -60,7 +60,7 @@ func (s *Model) operandFetchUnit(
 					if (regAaddr&^lock == 0) || (regBaddr&^lock == 0) {
 						validOut <- valid
 						pcAddrOut <- 0
-						xuOperOut <- bypassA
+						xuOperOut <- bypassB
 						operandA <- 0
 						operandB <- 0
 						operandC <- 0
@@ -78,7 +78,7 @@ func (s *Model) operandFetchUnit(
 					if regAaddr&^lock == 0 {
 						validOut <- valid
 						pcAddrOut <- 0
-						xuOperOut <- bypassA
+						xuOperOut <- bypassB
 						operandA <- 0
 						operandB <- 0
 						operandC <- 0
@@ -90,10 +90,56 @@ func (s *Model) operandFetchUnit(
 				regAaddrOut <- regAaddr
 				a = <-regAdata
 				b = (uint32)((int32)(ins) >> 20)
-			case opFormatB:
-			case opFormatJ:
-			case opFormatS:
 			case opFormatU:
+				a = pc
+				b = ins & 0xFFFFF000
+			case opFormatJ:
+				a = pc
+				b = (((uint32)((int32)(ins)>>12) & 0xFFF00000) |
+					(ins & 0x000FF000) |
+					((ins >> 9) & 0x800) |
+					((ins >> 20) & 0x7FE))
+			case opFormatS:
+				for lock := range regLock {
+					if (regAaddr&^lock == 0) || (regBaddr&^lock == 0) {
+						validOut <- valid
+						pcAddrOut <- 0
+						xuOperOut <- bypassB
+						operandA <- 0
+						operandB <- 0
+						operandC <- 0
+						regDaddrOut <- 0
+					} else {
+						break
+					}
+				}
+				regAaddrOut <- regAaddr
+				regBaddrOut <- regBaddr
+				a = <-regAdata
+				b = <-regBdata
+				c = (((uint32)((int32)(ins)>>20) & 0xFFFFFFE0) | ((ins >> 7) & 0x1F))
+			case opFormatB:
+				for lock := range regLock {
+					if (regAaddr&^lock == 0) || (regBaddr&^lock == 0) {
+						validOut <- valid
+						pcAddrOut <- 0
+						xuOperOut <- bypassB
+						operandA <- 0
+						operandB <- 0
+						operandC <- 0
+						regDaddrOut <- 0
+					} else {
+						break
+					}
+				}
+				regAaddrOut <- regAaddr
+				regBaddrOut <- regBaddr
+				a = <-regAdata
+				b = <-regBdata
+				c = (((uint32)((int32)(ins)>>20) & 0xFFFFF000) |
+					((ins << 4) & 0x800) |
+					((ins >> 20) & 0x7E0) |
+					((ins >> 7) & 0x1E))
 			}
 			validOut <- valid
 			pcAddrOut <- pc

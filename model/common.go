@@ -5,8 +5,6 @@ import (
 	"reflect"
 )
 
-const Version string = "0.1"
-
 type Model struct {
 	start, quit chan struct{}
 	memory      *memory

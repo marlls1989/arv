@@ -8,7 +8,7 @@ type opFormat uint8
 type xuOperation uint8
 
 const (
-	bypassA   xuOperation = 0x00
+	bypassB   xuOperation = 0x00
 	adderSum              = 0x10
 	adderSub              = 0x11
 	adderSlt              = 0x12
@@ -69,7 +69,7 @@ func (s *Model) decoderUnit(
 		<-s.start
 		instructionOut <- 0
 		opFmt <- opFormatU
-		xuOper <- bypassA
+		xuOper <- bypassB
 		regA <- 0
 		regB <- 0
 		regD <- 0
@@ -96,7 +96,7 @@ func (s *Model) decoderUnit(
 
 			switch ins & 0x7F {
 			case 0x37: //LUI
-				op = bypassA
+				op = bypassB
 			case 0x1F: //AUIPC
 				op = adderSum
 			case 0x6F: //JAL
@@ -127,11 +127,11 @@ func (s *Model) decoderUnit(
 					op = memoryLBU
 				case 0x5003: //LHU
 					op = memoryLHU
-				case 0x43: //SB
+				case 0x23: //SB
 					op = memorySB
-				case 0x1043: //SH
+				case 0x1023: //SH
 					op = memorySH
-				case 0x2043: //SW
+				case 0x2023: //SW
 					op = memorySW
 				case 0x13: //ADDI
 					op = adderSum
