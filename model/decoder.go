@@ -55,25 +55,8 @@ func (s *Model) decoderUnit(
 	opFmt chan<- opFormat,
 	regA, regB, regD chan<- uint32) {
 
-	go func() {
-		defer close(validOut)
-
-		<-s.start
-		validOut <- false
-		for v := range validIn {
-			validOut <- v
-		}
-	}()
-
-	go func() {
-		defer close(pcAddrOut)
-
-		<-s.start
-		pcAddrOut <- 0
-		for p := range pcAddrIn {
-			pcAddrOut <- p
-		}
-	}()
+	s.pipeElementWithInitization(validIn, false, validOut)
+	s.pipeElementWithInitization(pcAddrIn, uint32(0), pcAddrOut)
 
 	go func() {
 		defer close(instructionOut)

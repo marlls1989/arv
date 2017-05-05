@@ -106,3 +106,77 @@ func (s *Model) pipeElement(in interface{}, out ...interface{}) {
 		}
 	}()
 }
+
+func (s *Model) pipeElementWithInitization(in interface{}, init interface{}, out ...interface{}) {
+	vout := reflect.ValueOf(out)
+	vin := reflect.ValueOf(in)
+	vinit := reflect.ValueOf(init)
+
+	outLen := vout.Len()
+
+	if outLen < 1 {
+		log.Panic("`pipeElement` should contain at least one output argument")
+	}
+
+	inputIsChannel := false
+	chType := vin.Type()
+
+	if chType.Kind() == reflect.Chan {
+		chType = chType.Elem()
+		inputIsChannel = true
+	}
+
+	if vinit.Type() != chType {
+		log.Panic("`pipeElement` initialization must be the same type as main input and output")
+	}
+
+	for i := 0; i < outLen; i++ {
+		to := vout.Index(i).Type()
+		if (to.Kind() != reflect.Chan) || (to.Elem() != chType) {
+			log.Panicf("Output %d is not a %s channel, but %s",
+				i, chType.Kind(), to)
+		}
+	}
+
+	go func() {
+		for i := 0; i < outLen; i++ {
+			ov := vout.Index(i)
+			defer ov.Close()
+			ov.Send(vinit)
+		}
+
+		if inputIsChannel {
+			for {
+				a, ok := vin.Recv()
+				if ok {
+					for i := 0; i < outLen; i++ {
+						ov := vout.Index(i)
+						ov.Send(a)
+					}
+				} else {
+					return
+				}
+			}
+		} else {
+			var cases []reflect.SelectCase
+
+			cases[0] = reflect.SelectCase{
+				Chan: reflect.ValueOf(s.quit),
+				Dir:  reflect.SelectRecv}
+
+			for i := 0; i < outLen; i++ {
+				cases[i+1] = reflect.SelectCase{
+					Chan: vout.Index(i),
+					Dir:  reflect.SelectSend,
+					Send: vin}
+			}
+
+			for {
+				_, _, ok := reflect.Select(cases)
+				if !ok {
+					return
+				}
+			}
+		}
+	}()
+}

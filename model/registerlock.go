@@ -6,14 +6,19 @@ import (
 
 func (s *Model) reglockStage(
 	fifoIn, lockIn <-chan uint32,
-	fifoOut, lockOut chan<- uint32) {
+	fifoOut chan<- uint32,
+	lockOut ...chan<- uint32) {
 
 	go func() {
-		defer close(lockOut)
+		for _, c := range lockOut {
+			defer close(c)
+		}
 		defer close(fifoOut)
 
 		<-s.start
-		lockOut <- 0
+		for _, c := range lockOut {
+			c <- 0
+		}
 		fifoOut <- 0
 		for in := range fifoIn {
 			l, lv := <-lockIn
@@ -21,14 +26,16 @@ func (s *Model) reglockStage(
 				return
 			}
 			fifoOut <- in
-			lockOut <- (in | l) & 0xFFFFFFFE
+			for _, c := range lockOut {
+				c <- (in | l) & 0xFFFFFFFE
+			}
 		}
 	}()
 }
 
 func (s *Model) registerLock(
 	fifoIn <-chan uint32,
-	fifoOut, lockedRegisters chan<- uint32,
+	fifoOut, lockedRegs chan<- uint32,
 	stages int) {
 
 	if stages < 2 {
@@ -54,5 +61,5 @@ func (s *Model) registerLock(
 		s.reglockStage(fifo[i-1], lock[i], fifo[i], lock[i+1])
 	}
 
-	s.reglockStage(fifo[stages-2], lock[stages-1], fifoOut, lockedRegisters)
+	s.reglockStage(fifo[stages-2], lock[stages-1], fifoOut, lockedRegs)
 }
