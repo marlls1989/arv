@@ -15,20 +15,20 @@ const (
 	xuBranchSel            = 0x05
 )
 
-type programAtom struct {
+type programElement struct {
 	valid bool
 	unit  xuSelector
 }
 
 func (s *Model) prgQElement(
-	fifoIn <-chan programAtom,
-	fifoOut chan<- programAtom) {
+	fifoIn <-chan programElement,
+	fifoOut chan<- programElement) {
 
 	go func() {
 		defer close(fifoOut)
 
 		<-s.start
-		fifoOut <- programAtom{valid: false, unit: xuBypassSel}
+		fifoOut <- programElement{valid: false, unit: xuBypassSel}
 		for in := range fifoIn {
 			fifoOut <- in
 		}
@@ -36,18 +36,18 @@ func (s *Model) prgQElement(
 }
 
 func (s *Model) programQueue(
-	fifoIn <-chan programAtom,
-	fifoOut chan<- programAtom,
+	fifoIn <-chan programElement,
+	fifoOut chan<- programElement,
 	depth int) {
 
 	if depth < 2 {
 		log.Panic("Program ordering queue depth must be at least 2")
 	}
 
-	fifo := make([]chan programAtom, depth-1)
+	fifo := make([]chan programElement, depth-1)
 
 	for i := range fifo {
-		fifo[i] = make(chan programAtom)
+		fifo[i] = make(chan programElement)
 	}
 
 	s.prgQElement(fifoIn, fifo[0])
