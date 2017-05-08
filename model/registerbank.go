@@ -32,7 +32,7 @@ func (r *regFile) ReadPort(
 	}()
 }
 
-func (r *regFile) WritePort(data, addr <-chan uint32) {
+func (r *regFile) WritePort(addr, data <-chan uint32) {
 
 	go func() {
 		for d := range data {
