@@ -9,32 +9,21 @@ func (s *Model) operandFetchUnit(
 	regAaddrIn, regBaddrIn, regDaddrIn <-chan uint32,
 	regAdata, regBdata <-chan uint32,
 
-	validOut chan<- bool,
-	pcAddrOut chan<- uint32,
-	xuOperOut chan<- xuOperation,
-	regAaddrOut, regBaddrOut, regDaddrOut chan<- uint32,
-	operandA, operandB, operandC chan<- uint32) {
+	dispatcherOut chan<- dispatcherInput,
+	regAaddrOut, regBaddrOut, regDaddrOut chan<- uint32) {
 
 	go func() {
 
 		var a, b, c uint32
 
-		defer close(validOut)
-		defer close(xuOperOut)
 		defer close(regAaddrOut)
 		defer close(regBaddrOut)
 		defer close(regDaddrOut)
-		defer close(operandA)
-		defer close(operandB)
-		defer close(operandC)
+		defer close(dispatcherOut)
 
 		<-s.start
-		validOut <- false
-		pcAddrOut <- 0
-		xuOperOut <- bypassB
-		operandA <- 0
-		operandB <- 0
-		operandC <- 0
+		dispatcherOut <- dispatcherNOP
+
 		regDaddrOut <- 0
 		for ins := range instructionIn {
 			valid, vvalid := <-validIn
@@ -58,12 +47,7 @@ func (s *Model) operandFetchUnit(
 			case opFormatR:
 				for lock := range regLock {
 					if (regAaddr&^lock == 0) || (regBaddr&^lock == 0) {
-						validOut <- valid
-						pcAddrOut <- 0
-						xuOperOut <- bypassB
-						operandA <- 0
-						operandB <- 0
-						operandC <- 0
+						dispatcherOut <- dispatcherNOP
 						regDaddrOut <- 0
 					} else {
 						break
@@ -76,24 +60,22 @@ func (s *Model) operandFetchUnit(
 			case opFormatI:
 				for lock := range regLock {
 					if regAaddr&^lock == 0 {
-						validOut <- valid
-						pcAddrOut <- 0
-						xuOperOut <- bypassB
-						operandA <- 0
-						operandB <- 0
-						operandC <- 0
+						dispatcherOut <- dispatcherNOP
 						regDaddrOut <- 0
 					} else {
 						break
 					}
 				}
 				regAaddrOut <- regAaddr
+				regBaddrOut <- 0
 				a = <-regAdata
 				b = (uint32)((int32)(ins) >> 20)
 			case opFormatU:
 				<-regLock
 				a = pc
 				b = ins & 0xFFFFF000
+				regAaddrOut <- 0
+				regBaddrOut <- 0
 			case opFormatJ:
 				<-regLock
 				a = pc
@@ -101,15 +83,12 @@ func (s *Model) operandFetchUnit(
 					(ins & 0x000FF000) |
 					((ins >> 9) & 0x800) |
 					((ins >> 20) & 0x7FE))
+				regAaddrOut <- 0
+				regBaddrOut <- 0
 			case opFormatS:
 				for lock := range regLock {
 					if (regAaddr&^lock == 0) || (regBaddr&^lock == 0) {
-						validOut <- valid
-						pcAddrOut <- 0
-						xuOperOut <- bypassB
-						operandA <- 0
-						operandB <- 0
-						operandC <- 0
+						dispatcherOut <- dispatcherNOP
 						regDaddrOut <- 0
 					} else {
 						break
@@ -118,17 +97,12 @@ func (s *Model) operandFetchUnit(
 				regAaddrOut <- regAaddr
 				regBaddrOut <- regBaddr
 				a = <-regAdata
-				b = <-regBdata
-				c = (((uint32)((int32)(ins)>>20) & 0xFFFFFFE0) | ((ins >> 7) & 0x1F))
+				b = (((uint32)((int32)(ins)>>20) & 0xFFFFFFE0) | ((ins >> 7) & 0x1F))
+				c = <-regBdata
 			case opFormatB:
 				for lock := range regLock {
 					if (regAaddr&^lock == 0) || (regBaddr&^lock == 0) {
-						validOut <- valid
-						pcAddrOut <- 0
-						xuOperOut <- bypassB
-						operandA <- 0
-						operandB <- 0
-						operandC <- 0
+						dispatcherOut <- dispatcherNOP
 						regDaddrOut <- 0
 					} else {
 						break
@@ -143,12 +117,13 @@ func (s *Model) operandFetchUnit(
 					((ins >> 20) & 0x7E0) |
 					((ins >> 7) & 0x1E))
 			}
-			validOut <- valid
-			pcAddrOut <- pc
-			xuOperOut <- xuOp
-			operandA <- a
-			operandB <- b
-			operandC <- c
+			dispatcherOut <- dispatcherInput{
+				valid:  valid,
+				pcAddr: pc,
+				xuOper: xuOp,
+				a:      a,
+				b:      b,
+				c:      c}
 			if fmt == opFormatB || fmt == opFormatS {
 				regDaddrOut <- 0
 			} else {

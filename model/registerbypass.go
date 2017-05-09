@@ -36,29 +36,47 @@ func (s *Model) registerBypass(
 			if !vwdata {
 				return
 			}
-			
+
 			waddr, vwaddr := <-regWaddrIn
 			if !vwaddr {
 				return
 			}
-			
+
 			aaddr, vaaddr := <-regAaddrIn
 			if !vaaddr {
 				return
 			}
-			
+
 			baddr, vbaddr := <-regBaddrIn
 			if !vbaddr {
 				return
 			}
 
+			we = we && (waddr != 0)
+
 			if we {
-				regWdata <- wdata;
-				regWaddr <- waddr;
+				regWdata <- wdata
+				regWaddr <- waddr
 			}
 
-			if waddr & aaddr & 0xFFFFFFFE != 0 {
-				
+			if aaddr != 0 {
+				if we && (waddr&aaddr&0xFFFFFFFE != 0) {
+					regAdataOut <- wdata
+				} else {
+					regAaddr <- aaddr
+					adata := <-regAdata
+					regAdataOut <- adata
+				}
+			}
+
+			if baddr != 0 {
+				if we && (waddr&baddr&0xFFFFFFFE != 0) {
+					regBdataOut <- wdata
+				} else {
+					regBaddr <- baddr
+					bdata := <-regBdata
+					regBdataOut <- bdata
+				}
 			}
 		}
 	}()

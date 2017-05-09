@@ -15,6 +15,10 @@ const (
 	xuBranchSel            = 0x05
 )
 
+var programQNOP = programElement{
+	valid: false,
+	unit:  xuBypassSel}
+
 type programElement struct {
 	valid bool
 	unit  xuSelector
@@ -28,7 +32,7 @@ func (s *Model) prgQElement(
 		defer close(fifoOut)
 
 		<-s.start
-		fifoOut <- programElement{valid: false, unit: xuBypassSel}
+		fifoOut <- programQNOP
 		for in := range fifoIn {
 			fifoOut <- in
 		}
