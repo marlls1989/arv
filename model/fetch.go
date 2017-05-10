@@ -40,6 +40,7 @@ func (s *Model) nextPcUnit(
 
 func (s *Model) fetchUnit(
 	branch <-chan branchCmd,
+
 	pcAddr chan<- uint32,
 	instruction chan<- []byte,
 	valid chan<- bool) {

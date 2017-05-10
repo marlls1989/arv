@@ -124,6 +124,7 @@ func (s *Model) operandFetchUnit(
 				a:      a,
 				b:      b,
 				c:      c}
+
 			if fmt == opFormatB || fmt == opFormatS {
 				regDaddrOut <- 0
 			} else {
