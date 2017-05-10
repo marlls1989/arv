@@ -40,18 +40,24 @@ func (m *memory) ReadPort(addr, len <-chan uint32, data chan<- []byte) {
 
 }
 
-func (m *memory) WritePort(addr <-chan uint32, data <-chan []byte) {
+func (m *memory) WritePort(
+	addr <-chan uint32,
+	data <-chan []byte,
+	we <-chan bool) {
 	go func() {
-		defer m.mem.Sync(gommap.MS_ASYNC)
+		defer m.mem.Sync(gommap.MS_SYNC)
 
-		for a := range addr {
+		for e := range we {
+			a, da := <-addr
 			d, dv := <-data
-			if dv {
-				m.mux.Lock()
-				for i, b := range d {
-					m.mem[a+uint32(i)] = b
+			if dv && da {
+				if e {
+					m.mux.Lock()
+					for i, b := range d {
+						m.mem[a+uint32(i)] = b
+					}
+					m.mux.Unlock()
 				}
-				m.mux.Unlock()
 			} else {
 				return
 			}

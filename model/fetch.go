@@ -1,8 +1,14 @@
 package model
 
+type branchCmd struct {
+	taken  bool
+	target uint32
+}
+
 func (s *Model) nextPcUnit(
-	currPC, branchAddr <-chan uint32,
-	currValid, branch <-chan bool,
+	currPC <-chan uint32,
+	currValid <-chan bool,
+	branch <-chan branchCmd,
 	fetchAddr, nextPc chan<- uint32,
 	nextValid chan<- bool) {
 
@@ -19,14 +25,9 @@ func (s *Model) nextPcUnit(
 			var target uint32
 			valid := <-currValid
 			pc := <-currPC
-			if br {
-				brt, vbrt := <-branchAddr
-				if vbrt {
-					target = brt
-					valid = !valid
-				} else {
-					return
-				}
+			if br.taken {
+				target = br.target
+				valid = !valid
 			} else {
 				target = pc + 4
 			}
@@ -38,8 +39,7 @@ func (s *Model) nextPcUnit(
 }
 
 func (s *Model) fetchUnit(
-	branch <-chan bool,
-	branchAddr <-chan uint32,
+	branch <-chan branchCmd,
 	pcAddr chan<- uint32,
 	instruction chan<- []byte,
 	valid chan<- bool) {
@@ -51,7 +51,7 @@ func (s *Model) fetchUnit(
 	currValid := make(chan bool)
 	len := make(chan uint32)
 
-	s.nextPcUnit(currPC, branchAddr, currValid, branch, fetchAddr, nextPC, nextValid)
+	s.nextPcUnit(currPC, currValid, branch, fetchAddr, nextPC, nextValid)
 
 	s.pipeElement(nextPC, currPC, pcAddr)
 	s.pipeElement(nextValid, currValid, valid)
