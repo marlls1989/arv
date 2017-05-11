@@ -45,34 +45,37 @@ const (
 	opFormatJ
 )
 
+type decoderOut struct {
+	ins              uint32
+	regA, regB, regD uint32
+	op               xuOperation
+	fmt              opFormat
+}
+
 func (s *Model) decoderUnit(
 	validIn <-chan bool,
 	pcAddrIn <-chan uint32,
 	instructionIn <-chan []byte,
-	validOut chan<- bool,
-	instructionOut, pcAddrOut chan<- uint32,
-	xuOper chan<- xuOperation,
-	opFmt chan<- opFormat,
-	regA, regB, regD chan<- uint32) {
 
-	s.pipeElementWithInitization(validIn, false, validOut)
-	s.pipeElementWithInitization(pcAddrIn, uint32(0), pcAddrOut)
+	validOut chan<- bool,
+	pcAddrOut chan<- uint32,
+	output chan<- decoderOut) {
+
+	s.pipeElementWithInitization(validOut, false, validIn)
+	s.pipeElementWithInitization(pcAddrOut, uint32(0), pcAddrIn)
 
 	go func() {
-		defer close(instructionOut)
-		defer close(opFmt)
-		defer close(xuOper)
-		defer close(regA)
-		defer close(regB)
-		defer close(regD)
+		defer close(output)
 
 		<-s.start
-		instructionOut <- 0
-		opFmt <- opFormatU
-		xuOper <- bypassB
-		regA <- 0
-		regB <- 0
-		regD <- 0
+		output <- decoderOut{
+			ins:  0,
+			fmt:  opFormatU,
+			op:   bypassB,
+			regA: 0,
+			regB: 0,
+			regD: 0}
+
 		for i := range instructionIn {
 			var fmt opFormat
 			var op xuOperation
@@ -175,12 +178,13 @@ func (s *Model) decoderUnit(
 			rb := encodeOneHot32((uint)((ins >> 20) & 0x1F))
 			rd := encodeOneHot32((uint)((ins >> 7) & 0x1F))
 
-			instructionOut <- ins
-			opFmt <- fmt
-			xuOper <- op
-			regA <- ra
-			regB <- rb
-			regD <- rd
+			output <- decoderOut{
+				ins:  ins,
+				fmt:  fmt,
+				op:   op,
+				regA: ra,
+				regB: rb,
+				regD: rd}
 		}
 	}()
 }

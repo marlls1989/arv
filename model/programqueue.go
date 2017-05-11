@@ -15,14 +15,14 @@ const (
 	xuBranchSel            = 0x05
 )
 
-var programQNOP = programElement{
-	valid: false,
-	unit:  xuBypassSel}
-
 type programElement struct {
 	valid bool
 	unit  xuSelector
 }
+
+var programQNOP = programElement{
+	valid: false,
+	unit:  xuBypassSel}
 
 func (s *Model) prgQElement(
 	fifoIn <-chan programElement,

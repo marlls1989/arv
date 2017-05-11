@@ -1,11 +1,19 @@
 package model
 
-func (s *Model) registerBypass(
-	writeEnable <-chan bool,
-	regWaddrIn, regWdataIn <-chan uint32,
-	regAaddrIn, regBaddrIn <-chan uint32,
+type regReadCmd struct {
+	aaddr, baddr uint32
+}
 
-	regAdataOut, regBdataOut chan<- uint32) {
+type regDataRet struct {
+	adata, bdata uint32
+}
+
+func (s *Model) registerBypass(
+	regWcmd <-chan retireRegwCmd,
+	regWaddrIn <-chan uint32,
+	regRcmd <-chan regReadCmd,
+
+	regDataOut chan<- regDataRet) {
 
 	regWaddr := make(chan uint32)
 	regWdata := make(chan uint32)
@@ -26,57 +34,56 @@ func (s *Model) registerBypass(
 		defer close(regAaddr)
 		defer close(regBaddr)
 		defer close(regWaddr)
-		defer close(regAdataOut)
-		defer close(regBdataOut)
 		defer close(regWdata)
+		defer close(regDataOut)
 
-		for we := range writeEnable {
-
-			wdata, vwdata := <-regWdataIn
-			if !vwdata {
-				return
-			}
+		for wcmd := range regWcmd {
+			wdata := wcmd.data
 
 			waddr, vwaddr := <-regWaddrIn
 			if !vwaddr {
 				return
 			}
 
-			aaddr, vaaddr := <-regAaddrIn
-			if !vaaddr {
-				return
-			}
-
-			baddr, vbaddr := <-regBaddrIn
-			if !vbaddr {
-				return
-			}
-
-			we = we && (waddr != 0)
+			we := wcmd.we && (waddr != 0)
 
 			if we {
 				regWdata <- wdata
 				regWaddr <- waddr
 			}
 
+			rcmd, vrcmd := <-regRcmd
+			if !vrcmd {
+				return
+			}
+
+			aaddr := rcmd.aaddr
+			baddr := rcmd.baddr
+
+			var adata, bdata uint32
+
 			if aaddr != 0 {
 				if we && (waddr&aaddr&0xFFFFFFFE != 0) {
-					regAdataOut <- wdata
+					adata = wdata
 				} else {
 					regAaddr <- aaddr
-					adata := <-regAdata
-					regAdataOut <- adata
+					adata = <-regAdata
 				}
 			}
 
-			if baddr != 0 {
+			if aaddr != 0 {
 				if we && (waddr&baddr&0xFFFFFFFE != 0) {
-					regBdataOut <- wdata
+					bdata = wdata
 				} else {
 					regBaddr <- baddr
-					bdata := <-regBdata
-					regBdataOut <- bdata
+					bdata = <-regBdata
 				}
+			}
+
+			if aaddr != 0 || baddr != 0 {
+				regDataOut <- regDataRet{
+					adata: adata,
+					bdata: bdata}
 			}
 		}
 	}()

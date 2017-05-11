@@ -2,22 +2,20 @@ package model
 
 func (s *Model) operandFetchUnit(
 	validIn <-chan bool,
-	instructionIn, pcAddrIn <-chan uint32,
-	xuOperIn <-chan xuOperation,
-	opFmt <-chan opFormat,
+	pcAddrIn <-chan uint32,
 	regLock <-chan uint32,
-	regAaddrIn, regBaddrIn, regDaddrIn <-chan uint32,
-	regAdata, regBdata <-chan uint32,
+	decodedIn <-chan decoderOut,
+	regDataIn <-chan regDataRet,
 
 	dispatcherOut chan<- dispatcherInput,
-	regAaddrOut, regBaddrOut, regDaddrOut chan<- uint32) {
+	regRcmdOut chan<- regReadCmd,
+	regDaddrOut chan<- uint32) {
 
 	go func() {
 
 		var a, b, c uint32
 
-		defer close(regAaddrOut)
-		defer close(regBaddrOut)
+		defer close(regRcmdOut)
 		defer close(regDaddrOut)
 		defer close(dispatcherOut)
 
@@ -25,7 +23,7 @@ func (s *Model) operandFetchUnit(
 		dispatcherOut <- dispatcherNOP
 
 		regDaddrOut <- 0
-		for ins := range instructionIn {
+		for decoded := range decodedIn {
 			valid, vvalid := <-validIn
 			pc, vpc := <-pcAddrIn
 
@@ -33,11 +31,12 @@ func (s *Model) operandFetchUnit(
 				return
 			}
 
-			fmt := <-opFmt
-			xuOp := <-xuOperIn
-			regAaddr := <-regAaddrIn
-			regBaddr := <-regBaddrIn
-			regDaddr := <-regDaddrIn
+			ins := decoded.ins
+			fmt := decoded.fmt
+			xuOp := decoded.op
+			regAaddr := decoded.regA
+			regBaddr := decoded.regB
+			regDaddr := decoded.regD
 
 			a = 0
 			b = 0
@@ -53,10 +52,12 @@ func (s *Model) operandFetchUnit(
 						break
 					}
 				}
-				regAaddrOut <- regAaddr
-				regBaddrOut <- regBaddr
-				a = <-regAdata
-				b = <-regBdata
+				regRcmdOut <- regReadCmd{
+					aaddr: regAaddr,
+					baddr: regBaddr}
+				read := <-regDataIn
+				a = read.adata
+				b = read.bdata
 			case opFormatI:
 				for lock := range regLock {
 					if regAaddr&^lock == 0 {
@@ -66,16 +67,18 @@ func (s *Model) operandFetchUnit(
 						break
 					}
 				}
-				regAaddrOut <- regAaddr
-				regBaddrOut <- 0
-				a = <-regAdata
+				regRcmdOut <- regReadCmd{
+					aaddr: regAaddr}
+				read := <-regDataIn
+				a = read.adata
 				b = (uint32)((int32)(ins) >> 20)
 			case opFormatU:
 				<-regLock
 				a = pc
 				b = ins & 0xFFFFF000
-				regAaddrOut <- 0
-				regBaddrOut <- 0
+				regRcmdOut <- regReadCmd{
+					aaddr: 0,
+					baddr: 0}
 			case opFormatJ:
 				<-regLock
 				a = pc
@@ -83,8 +86,9 @@ func (s *Model) operandFetchUnit(
 					(ins & 0x000FF000) |
 					((ins >> 9) & 0x800) |
 					((ins >> 20) & 0x7FE))
-				regAaddrOut <- 0
-				regBaddrOut <- 0
+				regRcmdOut <- regReadCmd{
+					aaddr: 0,
+					baddr: 0}
 			case opFormatS:
 				for lock := range regLock {
 					if (regAaddr&^lock == 0) || (regBaddr&^lock == 0) {
@@ -94,11 +98,13 @@ func (s *Model) operandFetchUnit(
 						break
 					}
 				}
-				regAaddrOut <- regAaddr
-				regBaddrOut <- regBaddr
-				a = <-regAdata
+				regRcmdOut <- regReadCmd{
+					aaddr: regAaddr,
+					baddr: regBaddr}
+				read := <-regDataIn
+				a = read.adata
 				b = (((uint32)((int32)(ins)>>20) & 0xFFFFFFE0) | ((ins >> 7) & 0x1F))
-				c = <-regBdata
+				c = read.bdata
 			case opFormatB:
 				for lock := range regLock {
 					if (regAaddr&^lock == 0) || (regBaddr&^lock == 0) {
@@ -108,10 +114,12 @@ func (s *Model) operandFetchUnit(
 						break
 					}
 				}
-				regAaddrOut <- regAaddr
-				regBaddrOut <- regBaddr
-				a = <-regAdata
-				b = <-regBdata
+				regRcmdOut <- regReadCmd{
+					aaddr: regAaddr,
+					baddr: regBaddr}
+				read := <-regDataIn
+				a = read.adata
+				b = read.bdata
 				c = (((uint32)((int32)(ins)>>20) & 0xFFFFF000) |
 					((ins << 4) & 0x800) |
 					((ins >> 20) & 0x7E0) |
