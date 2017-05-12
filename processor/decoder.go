@@ -1,4 +1,4 @@
-package model
+package processor
 
 import (
 	"encoding/binary"
@@ -52,7 +52,7 @@ type decoderOut struct {
 	fmt              opFormat
 }
 
-func (s *Model) decoderUnit(
+func (s *Processor) decoderUnit(
 	validIn <-chan bool,
 	pcAddrIn <-chan uint32,
 	instructionIn <-chan []byte,

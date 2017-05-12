@@ -1,10 +1,10 @@
-package model
+package processor
 
 import (
 	"log"
 )
 
-func (s *Model) bypassUnit(input <-chan uint32, output chan<- uint32, depth int) {
+func (s *Processor) bypassUnit(input <-chan uint32, output chan<- uint32, depth int) {
 	if depth < 2 {
 		log.Panic("bypassunit queue depth must be at least 2")
 	}

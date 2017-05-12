@@ -1,4 +1,4 @@
-package model
+package processor
 
 type dispatcherInput struct {
 	valid   bool
@@ -15,7 +15,7 @@ var dispatcherNOP = dispatcherInput{
 	b:      0,
 	c:      0}
 
-func (s *Model) dispatcherUnit(
+func (s *Processor) dispatcherUnit(
 	dispatcherIn <-chan dispatcherInput,
 
 	programQOut chan<- programElement,

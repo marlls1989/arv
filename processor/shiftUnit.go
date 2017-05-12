@@ -1,11 +1,11 @@
-package model
+package processor
 
 type shifterInput struct {
 	op   xuOperation
 	a, b uint32
 }
 
-func (s *Model) shifterUnit(
+func (s *Processor) shifterUnit(
 	input <-chan shifterInput,
 	output chan<- uint32) {
 

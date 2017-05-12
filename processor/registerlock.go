@@ -1,10 +1,10 @@
-package model
+package processor
 
 import (
 	"log"
 )
 
-func (s *Model) reglockStage(
+func (s *Processor) reglockStage(
 	fifoIn, lockIn <-chan uint32,
 	fifoOut chan<- uint32,
 	lockOut ...chan<- uint32) {
@@ -33,7 +33,7 @@ func (s *Model) reglockStage(
 	}()
 }
 
-func (s *Model) registerLock(
+func (s *Processor) registerLock(
 	fifoIn <-chan uint32,
 	fifoOut, lockedRegs chan<- uint32,
 	stages int) {

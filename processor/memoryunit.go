@@ -1,4 +1,4 @@
-package model
+package processor
 
 import (
 	"encoding/binary"
@@ -14,7 +14,7 @@ type memoryUnitOutput struct {
 	value        uint32
 }
 
-func (s *Model) memoryUnit(
+func (s *Processor) memoryUnit(
 	input <-chan memoryUnitInput,
 	we <-chan bool,
 	output chan<- memoryUnitOutput) {
@@ -23,12 +23,12 @@ func (s *Model) memoryUnit(
 	rdata := make(chan []byte)
 	rlen := make(chan uint32)
 
-	s.memory.ReadPort(raddr, rlen, rdata)
+	s.Memory.ReadPort(raddr, rlen, rdata)
 
 	waddr := make(chan uint32)
 	wdata := make(chan []byte)
 
-	s.memory.WritePort(waddr, wdata, we)
+	s.Memory.WritePort(waddr, wdata, we)
 
 	operation := make(chan xuOperation)
 

@@ -1,4 +1,4 @@
-package model
+package processor
 
 type regReadCmd struct {
 	aaddr, baddr uint32
@@ -8,7 +8,7 @@ type regDataRet struct {
 	adata, bdata uint32
 }
 
-func (s *Model) registerBypass(
+func (s *Processor) registerBypass(
 	regWcmd <-chan retireRegwCmd,
 	regWaddrIn <-chan uint32,
 	regRcmd <-chan regReadCmd,

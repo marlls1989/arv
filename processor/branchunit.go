@@ -1,4 +1,4 @@
-package model
+package processor
 
 type branchInput struct {
 	a, b, c, pc uint32
@@ -10,7 +10,7 @@ type branchOutput struct {
 	linkAddr, target uint32
 }
 
-func (s *Model) branchUnit(
+func (s *Processor) branchUnit(
 	input <-chan branchInput,
 	output chan<- branchOutput) {
 

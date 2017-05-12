@@ -1,11 +1,11 @@
-package model
+package processor
 
 type retireRegwCmd struct {
 	we   bool
 	data uint32
 }
 
-func (s *Model) retireUnit(
+func (s *Processor) retireUnit(
 	qIn <-chan programElement,
 	bypassIn <-chan uint32,
 	adderIn <-chan uint32,

@@ -1,11 +1,11 @@
-package model
+package processor
 
 type branchCmd struct {
 	taken  bool
 	target uint32
 }
 
-func (s *Model) nextPcUnit(
+func (s *Processor) nextPcUnit(
 	currPC <-chan uint32,
 	currValid <-chan bool,
 	branch <-chan branchCmd,
@@ -38,7 +38,7 @@ func (s *Model) nextPcUnit(
 	}()
 }
 
-func (s *Model) fetchUnit(
+func (s *Processor) fetchUnit(
 	branch <-chan branchCmd,
 
 	pcAddr chan<- uint32,
@@ -58,5 +58,5 @@ func (s *Model) fetchUnit(
 	s.pipeElement(nextValid, currValid, valid)
 	s.pipeElement(uint32(4), len)
 
-	s.memory.ReadPort(fetchAddr, len, instruction)
+	s.Memory.ReadPort(fetchAddr, len, instruction)
 }

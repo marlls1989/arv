@@ -1,4 +1,4 @@
-package model
+package processor
 
 import (
 	"log"
@@ -24,7 +24,7 @@ var programQNOP = programElement{
 	valid: false,
 	unit:  xuBypassSel}
 
-func (s *Model) prgQElement(
+func (s *Processor) prgQElement(
 	fifoIn <-chan programElement,
 	fifoOut chan<- programElement) {
 
@@ -39,7 +39,7 @@ func (s *Model) prgQElement(
 	}()
 }
 
-func (s *Model) programQueue(
+func (s *Processor) programQueue(
 	fifoIn <-chan programElement,
 	fifoOut chan<- programElement,
 	depth int) {

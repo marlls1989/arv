@@ -1,13 +1,14 @@
-package model
+package processor
 
 import (
+	"../memory"
 	"log"
 	"reflect"
 )
 
-type Model struct {
+type Processor struct {
 	start, quit chan struct{}
-	memory      *memory
+	Memory      *Memory
 	regFile     regFile
 	startPC     uint32
 }
@@ -37,7 +38,7 @@ func decodeOneHot32(val uint32) (ret []uint) {
 /* Since this is a very common element,
  * it is being implemented as a "generic"
  */
-func (s *Model) pipeElement(in interface{}, out ...interface{}) {
+func (s *Processor) pipeElement(in interface{}, out ...interface{}) {
 	vout := reflect.ValueOf(out)
 	vin := reflect.ValueOf(in)
 
@@ -105,7 +106,7 @@ func (s *Model) pipeElement(in interface{}, out ...interface{}) {
 	}()
 }
 
-func (s *Model) pipeElementWithInitization(in interface{}, init interface{}, out ...interface{}) {
+func (s *Processor) pipeElementWithInitization(in interface{}, init interface{}, out ...interface{}) {
 	vout := reflect.ValueOf(out)
 	vin := reflect.ValueOf(in)
 	vinit := reflect.ValueOf(init)
@@ -177,4 +178,12 @@ func (s *Model) pipeElementWithInitization(in interface{}, init interface{}, out
 			}
 		}
 	}()
+}
+
+func (s *Processor) Start() {
+	if s.Memory != nil {
+		close(s.start)
+	} else {
+		log.Panic("Processor has no memory attached")
+	}
 }

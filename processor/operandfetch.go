@@ -1,6 +1,6 @@
-package model
+package processor
 
-func (s *Model) operandFetchUnit(
+func (s *Processor) operandFetchUnit(
 	validIn <-chan bool,
 	pcAddrIn <-chan uint32,
 	regLock <-chan uint32,

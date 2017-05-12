@@ -1,4 +1,4 @@
-package model
+package memory
 
 import (
 	"launchpad.net/gommap"
@@ -6,13 +6,18 @@ import (
 	"sync"
 )
 
-type memory struct {
+type Memory interface {
+	ReadPort(addr, len <-chan uint32, data chan<- []byte)
+	WritePort(addr <-chan uint32, data <-chan []byte, we <-chan bool)
+}
+
+type MemoryArray struct {
 	mem gommap.MMap
 	mux sync.Mutex
 }
 
-func initializeMemoryFromFile(file *os.File) (*memory, error) {
-	ret := new(memory)
+func initializeMemoryArrayFromFile(file *os.File) (*MemoryArray, error) {
+	ret := new(MemoryArray)
 
 	memory, err :=
 		gommap.Map(file.Fd(), gommap.PROT_READ|gommap.PROT_WRITE, gommap.MAP_SHARED)
@@ -22,7 +27,7 @@ func initializeMemoryFromFile(file *os.File) (*memory, error) {
 	return ret, err
 }
 
-func (m *memory) ReadPort(addr, len <-chan uint32, data chan<- []byte) {
+func (m *MemoryArray) ReadPort(addr, len <-chan uint32, data chan<- []byte) {
 	go func() {
 		defer close(data)
 		for a := range addr {
@@ -40,7 +45,7 @@ func (m *memory) ReadPort(addr, len <-chan uint32, data chan<- []byte) {
 
 }
 
-func (m *memory) WritePort(
+func (m *MemoryArray) WritePort(
 	addr <-chan uint32,
 	data <-chan []byte,
 	we <-chan bool) {

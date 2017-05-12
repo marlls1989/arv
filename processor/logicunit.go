@@ -1,11 +1,11 @@
-package model
+package processor
 
 type logicInput struct {
 	a, b uint32
 	op   xuOperation
 }
 
-func (s *Model) logicUnit(
+func (s *Processor) logicUnit(
 	input <-chan logicInput,
 	output chan<- uint32) {
 

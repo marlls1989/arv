@@ -1,11 +1,11 @@
-package model
+package processor
 
 type adderInput struct {
 	a, b uint32
 	op   xuOperation
 }
 
-func (s *Model) adderUnit(
+func (s *Processor) adderUnit(
 	input <-chan adderInput,
 	output chan<- uint32) {
 
