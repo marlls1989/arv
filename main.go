@@ -3,7 +3,7 @@ package main
 import (
 	"bitbucket.org/marcos_sartori/qdi-riscv/memory"
 	"bitbucket.org/marcos_sartori/qdi-riscv/processor"
-	"fmt"
+	"log"
 	"os"
 	"runtime"
 )
@@ -14,21 +14,28 @@ func main() {
 
 	file, err := os.OpenFile("memdump", os.O_RDWR|os.O_CREATE, 0666)
 	if err != nil {
-		fmt.Println(err)
+		log.Fatal(err)
 		os.Exit(-1)
 	}
+	log.Print("Memdump file opened")
 
 	proc := processor.ConstructProcessor()
+	log.Print("Processor model instantiated")
 
-	file.Truncate(4096)
-
+	file.Truncate(1024 * 1024)
 	mem, err := memory.MemoryArrayFromFile(file)
 
 	if err != nil {
-		fmt.Println(err)
+		log.Fatal(err)
 		os.Exit(-1)
 	}
-
 	proc.Memory = mem
+	log.Print("Memory model created from file")
+
+	proc.Start()
+	log.Print("Simulation started")
+
+	for {
+	}
 
 }

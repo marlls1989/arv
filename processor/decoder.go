@@ -61,8 +61,25 @@ func (s *Processor) decoderUnit(
 	pcAddrOut chan<- uint32,
 	output chan<- decoderOut) {
 
-	s.pipeElementWithInitization(validOut, false, validIn)
-	s.pipeElementWithInitization(pcAddrOut, uint32(0), pcAddrIn)
+	go func() {
+		defer close(pcAddrOut)
+
+		<-s.start
+		pcAddrOut <- 0
+		for i := range pcAddrIn {
+			pcAddrOut <- i
+		}
+	}()
+
+	go func() {
+		defer close(validOut)
+
+		<-s.start
+		validOut <- false
+		for i := range validIn {
+			validOut <- i
+		}
+	}()
 
 	go func() {
 		defer close(output)

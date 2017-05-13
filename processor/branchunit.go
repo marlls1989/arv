@@ -15,7 +15,13 @@ func (s *Processor) branchUnit(
 	output chan<- branchOutput) {
 
 	buffer := make(chan branchOutput)
-	s.pipeElement(buffer, output)
+
+	go func() {
+		defer close(output)
+		for i := range buffer {
+			output <- i
+		}
+	}()
 
 	go func() {
 		defer close(buffer)

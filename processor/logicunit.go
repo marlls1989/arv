@@ -11,7 +11,12 @@ func (s *Processor) logicUnit(
 
 	buffer := make(chan uint32)
 
-	s.pipeElement(buffer, output)
+	go func() {
+		defer close(output)
+		for i := range buffer {
+			output <- i
+		}
+	}()
 
 	go func() {
 		defer close(buffer)

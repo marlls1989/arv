@@ -22,7 +22,15 @@ func (s *Processor) retireUnit(
 	nextValid := make(chan bool)
 
 	// utilizes a loop to keep track of the current flow validity flag
-	s.pipeElementWithInitization(nextValid, true, currValid)
+	go func() {
+		defer close(nextValid)
+
+		<-s.start
+		nextValid <- true
+		for i := range currValid {
+			nextValid <- i
+		}
+	}()
 
 	go func() {
 		defer close(regWcmd)

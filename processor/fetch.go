@@ -54,9 +54,42 @@ func (s *Processor) fetchUnit(
 
 	s.nextPcUnit(currPC, currValid, branch, fetchAddr, nextPC, nextValid)
 
-	s.pipeElement(nextPC, currPC, pcAddr)
-	s.pipeElement(nextValid, currValid, valid)
-	s.pipeElement(uint32(4), len)
+	go func() {
+		defer close(currPC)
+		defer close(pcAddr)
+
+		<-s.start
+		currPC <- 0
+		pcAddr <- 0
+		for i := range nextPC {
+			currPC <- i
+			pcAddr <- i
+		}
+	}()
+
+	go func() {
+		defer close(currValid)
+		defer close(valid)
+
+		<-s.start
+		currValid <- false
+		valid <- false
+		for i := range nextValid {
+			currValid <- i
+			valid <- i
+		}
+	}()
+
+	go func() {
+		defer close(len)
+		for {
+			select {
+			case len <- 4:
+			case <-s.quit:
+				return
+			}
+		}
+	}()
 
 	s.Memory.ReadPort(fetchAddr, len, instruction)
 }
