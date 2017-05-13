@@ -9,26 +9,30 @@ func (s *Processor) adderUnit(
 	input <-chan adderInput,
 	output chan<- uint32) {
 
+	buffer := make(chan uint32)
+
+	s.pipeElement(buffer, output)
+
 	go func() {
-		defer close(output)
+		defer close(buffer)
 		for i := range input {
 			switch i.op {
 			case adderSub:
-				output <- i.a - i.b
+				buffer <- i.a - i.b
 			case adderSlt:
 				if int32(i.a) < int32(i.b) {
-					output <- 1
+					buffer <- 1
 				} else {
-					output <- 0
+					buffer <- 0
 				}
 			case adderSltu:
 				if uint32(i.a) < uint32(i.b) {
-					output <- 1
+					buffer <- 1
 				} else {
-					output <- 0
+					buffer <- 0
 				}
 			case adderSum:
-				output <- i.a + i.b
+				buffer <- i.a + i.b
 			}
 		}
 	}()

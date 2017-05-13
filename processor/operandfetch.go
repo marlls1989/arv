@@ -3,9 +3,9 @@ package processor
 func (s *Processor) operandFetchUnit(
 	validIn <-chan bool,
 	pcAddrIn <-chan uint32,
-	regLock <-chan uint32,
 	decodedIn <-chan decoderOut,
 	regDataIn <-chan regDataRet,
+	regLock <-chan uint32,
 
 	dispatcherOut chan<- dispatcherInput,
 	regRcmdOut chan<- regReadCmd,

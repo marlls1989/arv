@@ -9,17 +9,21 @@ func (s *Processor) shifterUnit(
 	input <-chan shifterInput,
 	output chan<- uint32) {
 
+	buffer := make(chan uint32)
+
+	s.pipeElement(buffer, output)
+
 	go func() {
-		defer close(output)
+		defer close(buffer)
 
 		for in := range input {
 			switch in.op {
 			case shifterLl:
-				output <- in.a << (in.b & 0x1f)
+				buffer <- in.a << (in.b & 0x1f)
 			case shifterRl:
-				output <- uint32(in.a) >> (in.b & 0x1F)
+				buffer <- uint32(in.a) >> (in.b & 0x1F)
 			case shifterRa:
-				output <- uint32(int32(in.a) >> in.b & 0x1F)
+				buffer <- uint32(int32(in.a) >> in.b & 0x1F)
 			}
 		}
 	}()

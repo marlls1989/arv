@@ -14,8 +14,7 @@ func (s *Processor) retireUnit(
 	memoryIn <-chan memoryUnitOutput,
 	branchIn <-chan branchOutput,
 
-	regWData chan<- uint32,
-	regWe chan<- bool,
+	regWcmd chan<- retireRegwCmd,
 	memoryWe chan<- bool,
 	branchOut chan<- branchCmd) {
 
@@ -26,8 +25,7 @@ func (s *Processor) retireUnit(
 	s.pipeElementWithInitization(nextValid, true, currValid)
 
 	go func() {
-		defer close(regWData)
-		defer close(regWe)
+		defer close(regWcmd)
 		defer close(memoryWe)
 		defer close(branchOut)
 		defer close(nextValid)
@@ -86,8 +84,9 @@ func (s *Processor) retireUnit(
 			}
 
 			branchOut <- brCmd
-			regWe <- rwe
-			regWData <- data
+			regWcmd <- retireRegwCmd{
+				we:   rwe,
+				data: data}
 			nextValid <- nValid
 		}
 

@@ -1,14 +1,14 @@
 package processor
 
 import (
-	"../memory"
+	"bitbucket.org/marcos_sartori/qdi-riscv/memory"
 	"log"
 	"reflect"
 )
 
 type Processor struct {
 	start, quit chan struct{}
-	Memory      *Memory
+	Memory      memory.Memory
 	regFile     regFile
 	startPC     uint32
 }
@@ -186,4 +186,8 @@ func (s *Processor) Start() {
 	} else {
 		log.Panic("Processor has no memory attached")
 	}
+}
+
+func (s *Processor) Stop() {
+	close(s.quit)
 }

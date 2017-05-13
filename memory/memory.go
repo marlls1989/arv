@@ -16,7 +16,7 @@ type MemoryArray struct {
 	mux sync.Mutex
 }
 
-func initializeMemoryArrayFromFile(file *os.File) (*MemoryArray, error) {
+func MemoryArrayFromFile(file *os.File) (*MemoryArray, error) {
 	ret := new(MemoryArray)
 
 	memory, err :=

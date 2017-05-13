@@ -1,7 +1,8 @@
 package main
 
 import (
-	"bitbucket.org/marcos_sartori/qdi-riscv/model"
+	"bitbucket.org/marcos_sartori/qdi-riscv/memory"
+	"bitbucket.org/marcos_sartori/qdi-riscv/processor"
 	"fmt"
 	"os"
 	"runtime"
@@ -17,10 +18,17 @@ func main() {
 		os.Exit(-1)
 	}
 
+	proc := processor.ConstructProcessor()
+
 	file.Truncate(4096)
+
+	mem, err := memory.MemoryArrayFromFile(file)
+
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(-1)
 	}
+
+	proc.Memory = mem
 
 }

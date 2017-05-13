@@ -9,16 +9,20 @@ func (s *Processor) logicUnit(
 	input <-chan logicInput,
 	output chan<- uint32) {
 
+	buffer := make(chan uint32)
+
+	s.pipeElement(buffer, output)
+
 	go func() {
-		defer close(output)
+		defer close(buffer)
 		for i := range input {
 			switch i.op {
 			case logicXor:
-				output <- i.a ^ i.b
+				buffer <- i.a ^ i.b
 			case logicOr:
-				output <- i.a | i.b
+				buffer <- i.a | i.b
 			case logicAnd:
-				output <- i.a & i.b
+				buffer <- i.a & i.b
 			}
 		}
 	}()

@@ -4,31 +4,25 @@ import (
 	"log"
 )
 
-func (s *Processor) reglockStage(
+func (s *Processor) reglockEl(
 	fifoIn, lockIn <-chan uint32,
 	fifoOut chan<- uint32,
-	lockOut ...chan<- uint32) {
+	lockOut chan<- uint32) {
 
 	go func() {
-		for _, c := range lockOut {
-			defer close(c)
-		}
+		defer close(lockOut)
 		defer close(fifoOut)
 
 		<-s.start
-		for _, c := range lockOut {
-			c <- 0
-		}
 		fifoOut <- 0
+		lockOut <- 0
 		for in := range fifoIn {
 			l, lv := <-lockIn
 			if !lv {
 				return
 			}
 			fifoOut <- in
-			for _, c := range lockOut {
-				c <- (in | l) & 0xFFFFFFFE
-			}
+			lockOut <- (in | l) & 0xFFFFFFFE
 		}
 	}()
 }
@@ -55,11 +49,11 @@ func (s *Processor) registerLock(
 
 	s.pipeElement(uint32(0), lock[0])
 
-	s.reglockStage(fifoIn, lock[0], fifo[0], lock[1])
+	s.reglockEl(fifoIn, lock[0], fifo[0], lock[1])
 
 	for i := 1; i < stages-1; i++ {
-		s.reglockStage(fifo[i-1], lock[i], fifo[i], lock[i+1])
+		s.reglockEl(fifo[i-1], lock[i], fifo[i], lock[i+1])
 	}
 
-	s.reglockStage(fifo[stages-2], lock[stages-1], fifoOut, lockedRegs)
+	s.reglockEl(fifo[stages-2], lock[stages-1], fifoOut, lockedRegs)
 }
