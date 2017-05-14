@@ -43,6 +43,7 @@ const (
 	opFormatB
 	opFormatU
 	opFormatJ
+	opFormatNop
 )
 
 type decoderOut struct {
@@ -112,9 +113,13 @@ func (s *Processor) decoderUnit(
 				fmt = opFormatU
 			case 0x23:
 				fmt = opFormatS
+			case 0xFF:
+				fmt = opFormatNop
 			}
 
 			switch ins & 0x7F {
+			case 0x0F: //FENCE (decoded as NOP)
+				op = bypassB
 			case 0x37: //LUI
 				op = bypassB
 			case 0x1F: //AUIPC

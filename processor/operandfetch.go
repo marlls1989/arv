@@ -124,7 +124,13 @@ func (s *Processor) operandFetchUnit(
 					((ins << 4) & 0x800) |
 					((ins >> 20) & 0x7E0) |
 					((ins >> 7) & 0x1E))
+			case opFormatNop:
+				<-regLock
+				regRcmdOut <- regReadCmd{
+					aaddr: 0,
+					baddr: 0}
 			}
+
 			dispatcherOut <- dispatcherInput{
 				valid:  valid,
 				pcAddr: pc,
@@ -133,7 +139,7 @@ func (s *Processor) operandFetchUnit(
 				b:      b,
 				c:      c}
 
-			if fmt == opFormatB || fmt == opFormatS {
+			if fmt == opFormatB || fmt == opFormatS || fmt == opFormatNop {
 				regDaddrOut <- 0
 			} else {
 				regDaddrOut <- regDaddr
