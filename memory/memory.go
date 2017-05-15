@@ -14,6 +14,8 @@ type Memory interface {
 type MemoryArray struct {
 	mem gommap.MMap
 	mux sync.Mutex
+
+	endSimulation chan struct{}
 }
 
 func MemoryArrayFromFile(file *os.File) (*MemoryArray, error) {
@@ -23,6 +25,7 @@ func MemoryArrayFromFile(file *os.File) (*MemoryArray, error) {
 		gommap.Map(file.Fd(), gommap.PROT_READ|gommap.PROT_WRITE, gommap.MAP_SHARED)
 
 	ret.mem = memory
+	ret.endSimulation = make(chan struct{})
 
 	return ret, err
 }
@@ -57,11 +60,18 @@ func (m *MemoryArray) WritePort(
 			d, dv := <-data
 			if dv && da {
 				if e {
-					m.mux.Lock()
-					for i, b := range d {
-						m.mem[a+uint32(i)] = b
+					if a < 0x80000000 {
+						m.mux.Lock()
+						for i, b := range d {
+							m.mem[a+uint32(i)] = b
+						}
+						m.mux.Unlock()
+					} else {
+						switch a {
+						case 0x80000000:
+							close(m.endSimulation)
+						}
 					}
-					m.mux.Unlock()
 				}
 			} else {
 				return
