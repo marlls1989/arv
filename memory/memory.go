@@ -1,6 +1,7 @@
 package memory
 
 import (
+	"fmt"
 	"launchpad.net/gommap"
 	"os"
 	"sync"
@@ -12,8 +13,9 @@ type Memory interface {
 }
 
 type MemoryArray struct {
-	mem gommap.MMap
-	mux sync.Mutex
+	mem           gommap.MMap
+	mux           sync.Mutex
+	EndSimulation chan struct{}
 }
 
 func MemoryArrayFromFile(file *os.File) (*MemoryArray, error) {
@@ -23,6 +25,7 @@ func MemoryArrayFromFile(file *os.File) (*MemoryArray, error) {
 		gommap.Map(file.Fd(), gommap.PROT_READ|gommap.PROT_WRITE, gommap.MAP_SHARED)
 
 	ret.mem = memory
+	ret.EndSimulation = make(chan struct{})
 
 	return ret, err
 }
@@ -57,14 +60,22 @@ func (m *MemoryArray) WritePort(
 			d, dv := <-data
 			if dv && da {
 				if e {
-					m.mux.Lock()
-					for i, b := range d {
-						m.mem[a+uint32(i)] = b
+					if a < 0x80000000 {
+						m.mux.Lock()
+						for i, b := range d {
+							m.mem[a+uint32(i)] = b
+						}
+						m.mux.Unlock()
+					} else if a < 0x80001000 {
+						close(m.EndSimulation)
+					} else {
+						for _, c := range d {
+							fmt.Printf("%c", c)
+						}
 					}
-					m.mux.Unlock()
+				} else {
+					return
 				}
-			} else {
-				return
 			}
 		}
 	}()

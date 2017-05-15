@@ -35,7 +35,6 @@ func main() {
 	proc.Start()
 	log.Print("Simulation started")
 
-	for {
-	}
-
+	<-mem.EndSimulation
+	proc.Stop()
 }
