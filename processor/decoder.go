@@ -2,6 +2,7 @@ package processor
 
 import (
 	"encoding/binary"
+	"log"
 )
 
 type opFormat uint8
@@ -115,6 +116,9 @@ func (s *Processor) decoderUnit(
 				fmt = opFormatS
 			case 0xFF:
 				fmt = opFormatNop
+			default:
+				log.Print("Decoding unknown instruction as NOP")
+				fmt = opFormatNop
 			}
 
 			switch ins & 0x7F {
@@ -192,6 +196,8 @@ func (s *Processor) decoderUnit(
 						op = logicOr
 					case 0x7033: //AND
 						op = logicAnd
+					default:
+						op = bypassB
 					}
 				}
 			}
