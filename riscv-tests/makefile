@@ -21,12 +21,12 @@ all: $(TEST_OBJS)
 	$(DUMP_RISCV) -s test.axf > test.cnt
 	$(OBJ_RISCV) -O binary test.axf test.bin
 	$(SIZE_RISCV) test.axf
-	hexdump -v -e '4/1 "%02x" "\n"' test.bin > test.txt
+	hexdump -v -e '4/1 "%02x" "\n"' test.bin > test.hex
 
 %.o: %.S tests/riscv_test.h tests/test_macros.h
 	$(GCC_RISCV) -o $@ -DTEST_FUNC_NAME=$(notdir $(basename $<)) \
 		-DTEST_FUNC_TXT='"$(notdir $(basename $<))"' -DTEST_FUNC_RET=$(notdir $(basename $<))_ret $<
 
 clean:
-	-rm -rf *.o *.axf *.map *.lst *.sec *.cnt *.txt *.bin *~
+	-rm -rf *.o *.axf *.map *.lst *.sec *.cnt *.hex *.bin *~
 	-rm -rf tests/*.o
