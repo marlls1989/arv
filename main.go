@@ -4,6 +4,7 @@ import (
 	"bitbucket.org/marcos_sartori/qdi-riscv/memory"
 	"bitbucket.org/marcos_sartori/qdi-riscv/processor"
 	"flag"
+	"fmt"
 	"log"
 	"os"
 	"runtime"
@@ -20,7 +21,7 @@ func main() {
 	args := flag.Args()
 
 	if len(args) < 1 {
-		log.Fatalf("USAGE: %s [options] <memorydump file>", os.Args[0])
+		fmt.Fprintf(os.Stderr, "USAGE: %s [options] <memorydump file>", os.Args[0])
 	}
 
 	file, err := os.OpenFile(args[0], os.O_RDWR|os.O_CREATE, 0666)
@@ -29,9 +30,6 @@ func main() {
 		os.Exit(-1)
 	}
 	log.Print("Memdump file opened")
-
-	proc := processor.ConstructProcessor()
-	log.Print("Processor model instantiated")
 
 	if *sizePtr >= 0 {
 		file.Truncate((*sizePtr) * 1024)
@@ -42,10 +40,12 @@ func main() {
 
 	if err != nil {
 		log.Fatal(err)
-		os.Exit(-1)
 	}
-	proc.Memory = mem
+
 	log.Print("Memory model created from file")
+
+	proc := processor.ConstructProcessor(mem)
+	log.Print("Processor model instantiated")
 
 	proc.Start()
 	log.Print("Simulation started")

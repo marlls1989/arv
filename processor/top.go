@@ -1,13 +1,18 @@
 package processor
 
+import (
+	"bitbucket.org/marcos_sartori/qdi-riscv/memory"
+)
+
 /* This function instanciate a new processor unit
  * calling each module constructor and constructing the interconect */
 
-func ConstructProcessor() *Processor {
+func ConstructProcessor(mem memory.Memory) *Processor {
 	proc := new(Processor)
 
 	proc.start = make(chan struct{})
 	proc.quit = make(chan struct{})
+	proc.Memory = mem
 
 	brCmd := make(chan branchCmd)
 	instruction := make(chan []byte)

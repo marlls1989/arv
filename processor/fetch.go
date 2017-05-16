@@ -21,6 +21,7 @@ func (s *Processor) nextPcUnit(
 		<-s.start
 		nextPc <- s.startPC
 		fetchAddr <- s.startPC
+		nextValid <- true
 		for br := range branch {
 			var target uint32
 			valid := <-currValid
@@ -58,9 +59,6 @@ func (s *Processor) fetchUnit(
 		defer close(currPC)
 		defer close(pcAddr)
 
-		<-s.start
-		currPC <- 0
-		pcAddr <- 0
 		for i := range nextPC {
 			currPC <- i
 			pcAddr <- i
@@ -71,9 +69,6 @@ func (s *Processor) fetchUnit(
 		defer close(currValid)
 		defer close(valid)
 
-		<-s.start
-		currValid <- false
-		valid <- false
 		for i := range nextValid {
 			currValid <- i
 			valid <- i

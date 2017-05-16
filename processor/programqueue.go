@@ -6,6 +6,7 @@ import (
 
 type xuSelector uint8
 
+//go:generate stringer -type=xuSelector
 const (
 	xuBypassSel xuSelector = 0x00
 	xuAdderSel             = 0x01

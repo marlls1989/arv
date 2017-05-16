@@ -1,5 +1,9 @@
 package processor
 
+import (
+	"log"
+)
+
 type retireRegwCmd struct {
 	we   bool
 	data uint32
@@ -23,12 +27,12 @@ func (s *Processor) retireUnit(
 
 	// utilizes a loop to keep track of the current flow validity flag
 	go func() {
-		defer close(nextValid)
+		defer close(currValid)
 
 		<-s.start
-		nextValid <- true
-		for i := range currValid {
-			nextValid <- i
+		currValid <- true
+		for i := range nextValid {
+			currValid <- i
 		}
 	}()
 
@@ -39,6 +43,7 @@ func (s *Processor) retireUnit(
 		defer close(nextValid)
 
 		for q := range qIn {
+			log.Printf("Retiring a instruction %s", q)
 
 			var data uint32
 			valid := <-currValid

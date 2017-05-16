@@ -8,6 +8,7 @@ import (
 type opFormat uint8
 type xuOperation uint8
 
+//go:generate stringer -type=xuOperation
 const (
 	bypassB   xuOperation = 0x00
 	adderSum              = 0x10
@@ -37,6 +38,7 @@ const (
 	branchJL              = 0x58
 )
 
+//go:generate stringer -type=opFormat
 const (
 	opFormatR opFormat = iota
 	opFormatI
