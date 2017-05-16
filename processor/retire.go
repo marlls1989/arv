@@ -29,8 +29,6 @@ func (s *Processor) retireUnit(
 	go func() {
 		defer close(currValid)
 
-		<-s.start
-		currValid <- 0
 		for i := range nextValid {
 			currValid <- i
 		}
@@ -41,6 +39,10 @@ func (s *Processor) retireUnit(
 		defer close(memoryWe)
 		defer close(branchOut)
 		defer close(nextValid)
+
+		<-s.start
+		nextValid <- 0
+		regWcmd <- retireRegwCmd{we: false}
 
 		for q := range qIn {
 			var data, brTarget uint32
@@ -70,8 +72,6 @@ func (s *Processor) retireUnit(
 				brTarget = br.target
 				rwe = br.link
 				data = br.linkAddr
-				/* if a branch is taken, increment the validity flag
-				 * to execute only the valid flow  */
 			}
 
 			/* Case the validty flag of the current instruction
@@ -94,6 +94,8 @@ func (s *Processor) retireUnit(
 				}
 			}
 
+			/* if a branch is taken, increment the validity flag
+			 * to execute only the valid flow  */
 			if brTaken {
 				nextValid <- valid + 1
 			} else {

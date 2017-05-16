@@ -35,6 +35,12 @@ func (s *Processor) dispatcherUnit(
 		defer close(memoryOut)
 		defer close(branchOut)
 
+		<-s.start
+		programQOut <- programElement{
+			unit:  xuBypassSel,
+			valid: 255}
+		bypassOut <- 0
+
 		for in := range dispatcherIn {
 			xuSel := xuSelector(in.xuOper >> 4)
 

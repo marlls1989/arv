@@ -9,7 +9,7 @@ func (s *Processor) operandFetchUnit(
 	pcAddrIn <-chan uint32,
 	decodedIn <-chan decoderOut,
 	regDataIn <-chan regDataRet,
-	regLock <-chan regAddr,
+	regLock <-chan uint32,
 
 	dispatcherOut chan<- dispatcherInput,
 	regRcmdOut chan<- regReadCmd,
@@ -22,16 +22,6 @@ func (s *Processor) operandFetchUnit(
 		defer close(regRcmdOut)
 		defer close(regDaddrOut)
 		defer close(dispatcherOut)
-
-		<-s.start
-		dispatcherOut <- dispatcherInput{
-			valid:  255,
-			pcAddr: 0,
-			xuOper: bypassB,
-			a:      0,
-			b:      0,
-			c:      0}
-		regDaddrOut <- 0
 
 		for decoded := range decodedIn {
 			valid, vvalid := <-validIn
@@ -57,7 +47,8 @@ func (s *Processor) operandFetchUnit(
 			switch fmt {
 			case opFormatR:
 				for lock := range regLock {
-					if (regAaddr&^lock == 0) || (regBaddr&^lock == 0) {
+					if (uint32(regAaddr)&^lock == 0) || (uint32(regBaddr)&^lock == 0) {
+						log.Printf("Issuing bubble due to register lock %08X", lock)
 						regRcmdOut <- regReadCmd{
 							aaddr: 0,
 							baddr: 0}
@@ -82,7 +73,8 @@ func (s *Processor) operandFetchUnit(
 
 			case opFormatI:
 				for lock := range regLock {
-					if regAaddr&^lock == 0 {
+					if uint32(regAaddr)&^lock == 0 {
+						log.Printf("Issuing bubble due to register lock %08X", lock)
 						regRcmdOut <- regReadCmd{
 							aaddr: 0,
 							baddr: 0}
@@ -125,7 +117,8 @@ func (s *Processor) operandFetchUnit(
 
 			case opFormatS:
 				for lock := range regLock {
-					if (regAaddr&^lock == 0) || (regBaddr&^lock == 0) {
+					if (uint32(regAaddr)&^lock == 0) || (uint32(regBaddr)&^lock == 0) {
+						log.Printf("Issuing bubble due to register lock %08X", lock)
 						regRcmdOut <- regReadCmd{
 							aaddr: 0,
 							baddr: 0}
@@ -151,7 +144,8 @@ func (s *Processor) operandFetchUnit(
 
 			case opFormatB:
 				for lock := range regLock {
-					if (regAaddr&^lock == 0) || (regBaddr&^lock == 0) {
+					if (uint32(regAaddr)&^lock == 0) || (uint32(regBaddr)&^lock == 0) {
+						log.Printf("Issuing bubble due to register lock %08X", lock)
 						regRcmdOut <- regReadCmd{
 							aaddr: 0,
 							baddr: 0}

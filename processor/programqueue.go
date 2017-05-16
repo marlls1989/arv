@@ -33,6 +33,11 @@ func (s *Processor) prgQElement(
 	go func() {
 		defer close(fifoOut)
 
+		<-s.start
+		fifoOut <- programElement{
+			valid: 255,
+			unit:  xuBypassSel}
+
 		for in := range fifoIn {
 			fifoOut <- in
 		}

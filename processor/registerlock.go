@@ -5,28 +5,34 @@ import (
 )
 
 func (s *Processor) reglockEl(
-	fifoIn, lockIn <-chan regAddr,
+	fifoIn <-chan regAddr,
+	lockIn <-chan uint32,
 	fifoOut chan<- regAddr,
-	lockOut chan<- regAddr) {
+	lockOut chan<- uint32) {
 
 	go func() {
 		defer close(lockOut)
 		defer close(fifoOut)
 
+		<-s.start
+		fifoOut <- 0
+		lockOut <- 0
 		for in := range fifoIn {
 			l, lv := <-lockIn
 			if !lv {
 				return
 			}
+			lock := (uint32(in) | l) & 0xFFFFFFFE
 			fifoOut <- in
-			lockOut <- (in | l) & 0xFFFFFFFE
+			lockOut <- lock
 		}
 	}()
 }
 
 func (s *Processor) registerLock(
 	fifoIn <-chan regAddr,
-	fifoOut, lockedRegs chan<- regAddr,
+	fifoOut chan<- regAddr,
+	lockedRegs chan<- uint32,
 	stages int) {
 
 	if stages < 2 {
@@ -34,14 +40,14 @@ func (s *Processor) registerLock(
 	}
 
 	fifo := make([]chan regAddr, stages-1)
-	lock := make([]chan regAddr, stages)
+	lock := make([]chan uint32, stages)
 
 	for i := range fifo {
 		fifo[i] = make(chan regAddr)
 	}
 
 	for i := range lock {
-		lock[i] = make(chan regAddr)
+		lock[i] = make(chan uint32)
 	}
 
 	go func() {

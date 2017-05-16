@@ -8,6 +8,9 @@ func (s *Processor) bypassEl(input <-chan uint32, output chan<- uint32) {
 	go func() {
 		defer close(output)
 
+		<-s.start
+		output <- 0
+
 		for i := range input {
 			output <- i
 		}
