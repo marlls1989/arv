@@ -1,19 +1,11 @@
 package processor
 
 type dispatcherInput struct {
-	valid   bool
+	valid   uint8
 	pcAddr  uint32
 	xuOper  xuOperation
 	a, b, c uint32
 }
-
-var dispatcherNOP = dispatcherInput{
-	valid:  false,
-	pcAddr: 0,
-	xuOper: bypassB,
-	a:      0,
-	b:      0,
-	c:      0}
 
 func (s *Processor) dispatcherUnit(
 	dispatcherIn <-chan dispatcherInput,
@@ -36,7 +28,9 @@ func (s *Processor) dispatcherUnit(
 
 		<-s.start
 		bypassOut <- 0
-		programQOut <- programQNOP
+		programQOut <- programElement{
+			valid: 255,
+			unit:  xuBypassSel}
 		for in := range dispatcherIn {
 
 			xuSel := xuSelector(in.xuOper >> 4)

@@ -17,13 +17,9 @@ const (
 )
 
 type programElement struct {
-	valid bool
+	valid uint8
 	unit  xuSelector
 }
-
-var programQNOP = programElement{
-	valid: false,
-	unit:  xuBypassSel}
 
 func (s *Processor) prgQElement(
 	fifoIn <-chan programElement,
@@ -33,7 +29,9 @@ func (s *Processor) prgQElement(
 		defer close(fifoOut)
 
 		<-s.start
-		fifoOut <- programQNOP
+		fifoOut <- programElement{
+			valid: 255,
+			unit:  xuBypassSel}
 		for in := range fifoIn {
 			fifoOut <- in
 		}

@@ -1,5 +1,9 @@
 package processor
 
+import (
+	"log"
+)
+
 type branchCmd struct {
 	taken  bool
 	target uint32
@@ -7,10 +11,10 @@ type branchCmd struct {
 
 func (s *Processor) nextPcUnit(
 	currPC <-chan uint32,
-	currValid <-chan bool,
+	currValid <-chan uint8,
 	branch <-chan branchCmd,
 	fetchAddr, nextPc chan<- uint32,
-	nextValid chan<- bool) {
+	nextValid chan<- uint8) {
 
 	go func() {
 
@@ -21,15 +25,20 @@ func (s *Processor) nextPcUnit(
 		<-s.start
 		nextPc <- s.startPC
 		fetchAddr <- s.startPC
-		nextValid <- true
-		for br := range branch {
+		nextValid <- 0
+		for pc := range currPC {
 			var target uint32
 			valid := <-currValid
-			pc := <-currPC
-			if br.taken {
-				target = br.target
-				valid = !valid
-			} else {
+			select {
+			case br := <-branch:
+				if br.taken {
+					target = br.target
+					valid = valid + 1
+					log.Printf("Branching to 0x%X", target)
+				} else {
+					target = pc + 4
+				}
+			default: //Uncouple the fetch loop by taking branch completeness as a cue
 				target = pc + 4
 			}
 			fetchAddr <- target
@@ -44,13 +53,13 @@ func (s *Processor) fetchUnit(
 
 	pcAddr chan<- uint32,
 	instruction chan<- []byte,
-	valid chan<- bool) {
+	valid chan<- uint8) {
 
 	nextPC := make(chan uint32)
 	currPC := make(chan uint32)
 	fetchAddr := make(chan uint32)
-	nextValid := make(chan bool)
-	currValid := make(chan bool)
+	nextValid := make(chan uint8)
+	currValid := make(chan uint8)
 	len := make(chan uint32)
 
 	s.nextPcUnit(currPC, currValid, branch, fetchAddr, nextPC, nextValid)

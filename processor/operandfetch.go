@@ -1,7 +1,11 @@
 package processor
 
+import (
+	"log"
+)
+
 func (s *Processor) operandFetchUnit(
-	validIn <-chan bool,
+	validIn <-chan uint8,
 	pcAddrIn <-chan uint32,
 	decodedIn <-chan decoderOut,
 	regDataIn <-chan regDataRet,
@@ -19,10 +23,6 @@ func (s *Processor) operandFetchUnit(
 		defer close(regDaddrOut)
 		defer close(dispatcherOut)
 
-		<-s.start
-		dispatcherOut <- dispatcherNOP
-
-		regDaddrOut <- 0
 		for decoded := range decodedIn {
 			valid, vvalid := <-validIn
 			pc, vpc := <-pcAddrIn
@@ -30,6 +30,8 @@ func (s *Processor) operandFetchUnit(
 			if !vvalid || !vpc {
 				return
 			}
+
+			log.Printf("OPF Received decoded instruction: %+v pc: 0x%X valid: %v", decoded, pc, valid)
 
 			ins := decoded.ins
 			fmt := decoded.fmt
@@ -46,7 +48,16 @@ func (s *Processor) operandFetchUnit(
 			case opFormatR:
 				for lock := range regLock {
 					if (regAaddr&^lock == 0) || (regBaddr&^lock == 0) {
-						dispatcherOut <- dispatcherNOP
+						regRcmdOut <- regReadCmd{
+							aaddr: 0,
+							baddr: 0}
+						dispatcherOut <- dispatcherInput{
+							valid:  valid,
+							pcAddr: 0,
+							xuOper: bypassB,
+							a:      0,
+							b:      0,
+							c:      0}
 						regDaddrOut <- 0
 					} else {
 						break
@@ -61,7 +72,16 @@ func (s *Processor) operandFetchUnit(
 			case opFormatI:
 				for lock := range regLock {
 					if regAaddr&^lock == 0 {
-						dispatcherOut <- dispatcherNOP
+						regRcmdOut <- regReadCmd{
+							aaddr: 0,
+							baddr: 0}
+						dispatcherOut <- dispatcherInput{
+							valid:  valid,
+							pcAddr: 0,
+							xuOper: bypassB,
+							a:      0,
+							b:      0,
+							c:      0}
 						regDaddrOut <- 0
 					} else {
 						break
@@ -73,26 +93,35 @@ func (s *Processor) operandFetchUnit(
 				a = read.adata
 				b = (uint32)((int32)(ins) >> 20)
 			case opFormatU:
-				<-regLock
-				a = pc
-				b = ins & 0xFFFFF000
 				regRcmdOut <- regReadCmd{
 					aaddr: 0,
 					baddr: 0}
+				<-regLock
+				a = pc
+				b = ins & 0xFFFFF000
 			case opFormatJ:
+				regRcmdOut <- regReadCmd{
+					aaddr: 0,
+					baddr: 0}
 				<-regLock
 				a = pc
 				b = (((uint32)((int32)(ins)>>12) & 0xFFF00000) |
 					(ins & 0x000FF000) |
 					((ins >> 9) & 0x800) |
 					((ins >> 20) & 0x7FE))
-				regRcmdOut <- regReadCmd{
-					aaddr: 0,
-					baddr: 0}
 			case opFormatS:
 				for lock := range regLock {
 					if (regAaddr&^lock == 0) || (regBaddr&^lock == 0) {
-						dispatcherOut <- dispatcherNOP
+						regRcmdOut <- regReadCmd{
+							aaddr: 0,
+							baddr: 0}
+						dispatcherOut <- dispatcherInput{
+							valid:  valid,
+							pcAddr: 0,
+							xuOper: bypassB,
+							a:      0,
+							b:      0,
+							c:      0}
 						regDaddrOut <- 0
 					} else {
 						break
@@ -108,7 +137,13 @@ func (s *Processor) operandFetchUnit(
 			case opFormatB:
 				for lock := range regLock {
 					if (regAaddr&^lock == 0) || (regBaddr&^lock == 0) {
-						dispatcherOut <- dispatcherNOP
+						dispatcherOut <- dispatcherInput{
+							valid:  valid,
+							pcAddr: 0,
+							xuOper: bypassB,
+							a:      0,
+							b:      0,
+							c:      0}
 						regDaddrOut <- 0
 					} else {
 						break

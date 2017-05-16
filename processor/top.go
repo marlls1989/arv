@@ -14,14 +14,17 @@ func ConstructProcessor(mem memory.Memory) *Processor {
 	proc.quit = make(chan struct{})
 	proc.Memory = mem
 
-	brCmd := make(chan branchCmd)
+	/* Creating an unitialised queue for branch commands
+	 * to acommodate NOPs inserted by the execution loop
+	 * into the control loop */
+	brCmd := make(chan branchCmd, 2)
 	instruction := make(chan []byte)
-	fetchValid := make(chan bool)
+	fetchValid := make(chan uint8)
 	fetchPcAddr := make(chan uint32)
 
 	proc.fetchUnit(brCmd, fetchPcAddr, instruction, fetchValid)
 
-	decoderValid := make(chan bool)
+	decoderValid := make(chan uint8)
 	decoderPcAddr := make(chan uint32)
 	decoderOutput := make(chan decoderOut)
 

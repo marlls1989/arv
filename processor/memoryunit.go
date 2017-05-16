@@ -48,14 +48,14 @@ func (s *Processor) memoryUnit(
 
 			switch in.op {
 			case memoryLB, memoryLBU:
+				raddr <- addr
 				rlen <- 1
-				raddr <- addr
 			case memoryLH, memoryLHU:
+				raddr <- addr
 				rlen <- 2
-				raddr <- addr
 			case memoryLW:
-				rlen <- 4
 				raddr <- addr
+				rlen <- 4
 			case memorySB:
 				waddr <- addr
 				data := make([]byte, 1)

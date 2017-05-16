@@ -22,15 +22,15 @@ func (s *Processor) retireUnit(
 	memoryWe chan<- bool,
 	branchOut chan<- branchCmd) {
 
-	currValid := make(chan bool)
-	nextValid := make(chan bool)
+	currValid := make(chan uint8)
+	nextValid := make(chan uint8)
 
 	// utilizes a loop to keep track of the current flow validity flag
 	go func() {
 		defer close(currValid)
 
 		<-s.start
-		currValid <- true
+		currValid <- 0
 		for i := range nextValid {
 			currValid <- i
 		}
@@ -43,7 +43,7 @@ func (s *Processor) retireUnit(
 		defer close(nextValid)
 
 		for q := range qIn {
-			log.Printf("Retiring a instruction %s", q)
+			log.Printf("Retiring a instruction %+v", q)
 
 			var data uint32
 			valid := <-currValid
@@ -74,10 +74,11 @@ func (s *Processor) retireUnit(
 				brCmd.target = br.target
 				rwe = br.link
 				data = br.linkAddr
-				/* if a branch is taken, flip the validity flag
-				 * of the instruction flow for the next instructions */
-				nValid = brCmd.taken != valid // XORing to negate
-
+				/* if a branch is taken, increment the validity flag
+				 * to execute only the valid flow  */
+				if brCmd.taken {
+					nValid = valid + 1
+				}
 			}
 
 			/* Case the validty flag of the current instruction
@@ -96,11 +97,13 @@ func (s *Processor) retireUnit(
 				memoryWe <- true
 			}
 
-			branchOut <- brCmd
+			nextValid <- nValid
 			regWcmd <- retireRegwCmd{
 				we:   rwe,
 				data: data}
-			nextValid <- nValid
+			if brCmd.taken {
+				branchOut <- brCmd
+			}
 		}
 
 	}()

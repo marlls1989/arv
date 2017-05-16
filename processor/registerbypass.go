@@ -71,7 +71,7 @@ func (s *Processor) registerBypass(
 				}
 			}
 
-			if aaddr != 0 {
+			if baddr != 0 {
 				if we && (waddr&baddr&0xFFFFFFFE != 0) {
 					bdata = wdata
 				} else {

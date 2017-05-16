@@ -57,19 +57,17 @@ type decoderOut struct {
 }
 
 func (s *Processor) decoderUnit(
-	validIn <-chan bool,
+	validIn <-chan uint8,
 	pcAddrIn <-chan uint32,
 	instructionIn <-chan []byte,
 
-	validOut chan<- bool,
+	validOut chan<- uint8,
 	pcAddrOut chan<- uint32,
 	output chan<- decoderOut) {
 
 	go func() {
 		defer close(pcAddrOut)
 
-		<-s.start
-		pcAddrOut <- 0
 		for i := range pcAddrIn {
 			pcAddrOut <- i
 		}
@@ -78,8 +76,6 @@ func (s *Processor) decoderUnit(
 	go func() {
 		defer close(validOut)
 
-		<-s.start
-		validOut <- false
 		for i := range validIn {
 			validOut <- i
 		}
@@ -87,15 +83,6 @@ func (s *Processor) decoderUnit(
 
 	go func() {
 		defer close(output)
-
-		<-s.start
-		output <- decoderOut{
-			ins:  0,
-			fmt:  opFormatU,
-			op:   bypassB,
-			regA: 0,
-			regB: 0,
-			regD: 0}
 
 		for i := range instructionIn {
 			var fmt opFormat
