@@ -10,14 +10,14 @@ type regFile struct {
 }
 
 func (r *regFile) ReadPort(
-	addr <-chan uint32,
+	addr <-chan regAddr,
 	data chan<- uint32) {
 
 	go func() {
 		defer close(data)
 
 		for a := range addr {
-			ad := decodeOneHot32(a)
+			ad := decodeOneHot32(uint32(a))
 			if len(ad) != 0 {
 				if ad[0] == 0 {
 					data <- 0
@@ -32,7 +32,7 @@ func (r *regFile) ReadPort(
 	}()
 }
 
-func (r *regFile) WritePort(addr, data <-chan uint32) {
+func (r *regFile) WritePort(addr <-chan regAddr, data <-chan uint32) {
 
 	go func() {
 		for d := range data {
@@ -41,7 +41,7 @@ func (r *regFile) WritePort(addr, data <-chan uint32) {
 				return
 			}
 
-			ad := decodeOneHot32(a)
+			ad := decodeOneHot32(uint32(a))
 			if len(ad) != 0 && ad[0] != 0 {
 				r.mux.Lock()
 				r.reg[ad[0]-1] = d

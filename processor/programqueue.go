@@ -1,6 +1,7 @@
 package processor
 
 import (
+	"fmt"
 	"log"
 )
 
@@ -19,6 +20,10 @@ const (
 type programElement struct {
 	valid uint8
 	unit  xuSelector
+}
+
+func (p programElement) String() string {
+	return fmt.Sprintf("{valid:%v unit:%v}", p.valid, p.unit)
 }
 
 func (s *Processor) prgQElement(

@@ -2,6 +2,7 @@ package processor
 
 import (
 	"encoding/binary"
+	"fmt"
 	"log"
 )
 
@@ -10,32 +11,47 @@ type xuOperation uint8
 
 //go:generate stringer -type=xuOperation
 const (
-	bypassB   xuOperation = 0x00
-	adderSum              = 0x10
-	adderSub              = 0x11
-	adderSlt              = 0x12
-	adderSltu             = 0x13
-	shifterLl             = 0x20
-	shifterRl             = 0x21
-	shifterRa             = 0x22
-	logicXor              = 0x30
-	logicOr               = 0x31
-	logicAnd              = 0x32
-	memoryLB              = 0x40
-	memoryLH              = 0x41
-	memoryLW              = 0x42
-	memoryLBU             = 0x44
-	memoryLHU             = 0x45
-	memorySB              = 0x48
-	memorySH              = 0x49
-	memorySW              = 0x4A
-	branchEQ              = 0x50
-	branchNE              = 0x51
-	branchLT              = 0x54
-	branchGE              = 0x55
-	branchLTU             = 0x56
-	branchGEU             = 0x57
-	branchJL              = 0x58
+	bypassB xuOperation = iota
+)
+
+const (
+	adderSum xuOperation = 0x10 + iota
+	adderSub
+	adderSlt
+	adderSltu
+)
+
+const (
+	shifterLl xuOperation = 0x20 + iota
+	shifterRl
+	shifterRa
+)
+
+const (
+	logicXor xuOperation = 0x30 + iota
+	logicOr
+	logicAnd
+)
+
+const (
+	memoryLB xuOperation = 0x40 + iota
+	memoryLH
+	memoryLW
+	memoryLBU
+	memoryLHU
+	memorySB
+	memorySH
+	memorySW
+)
+
+const (
+	branchEQ xuOperation = 0x50 + iota
+	branchNE
+	branchLT
+	branchGE
+	branchLTU
+	branchGEU
+	branchJL
 )
 
 //go:generate stringer -type=opFormat
@@ -49,11 +65,53 @@ const (
 	opFormatNop
 )
 
+type regAddr uint32
+
+//go:generate stringer -type=regAddr
+const (
+	zero regAddr = 1 << iota
+	ra
+	sp
+	gp
+	tp
+	t0
+	t1
+	t2
+	s0
+	s1
+	a0
+	a1
+	a2
+	a3
+	a4
+	a5
+	a6
+	a7
+	s2
+	s3
+	s4
+	s5
+	s6
+	s7
+	s8
+	s9
+	s10
+	s11
+	t3
+	t4
+	t5
+	t6
+)
+
 type decoderOut struct {
 	ins              uint32
-	regA, regB, regD uint32
+	regA, regB, regD regAddr
 	op               xuOperation
 	fmt              opFormat
+}
+
+func (d decoderOut) String() string {
+	return fmt.Sprintf("{ins:%08X regA:%v regB:%v regD:%v op:%v fmt:%v}", d.ins, d.regA, d.regB, d.regD, d.op, d.fmt)
 }
 
 func (s *Processor) decoderUnit(
@@ -191,9 +249,9 @@ func (s *Processor) decoderUnit(
 				}
 			}
 
-			ra := encodeOneHot32((uint)((ins >> 15) & 0x1F))
-			rb := encodeOneHot32((uint)((ins >> 20) & 0x1F))
-			rd := encodeOneHot32((uint)((ins >> 7) & 0x1F))
+			ra := regAddr(encodeOneHot32((uint)((ins >> 15) & 0x1F)))
+			rb := regAddr(encodeOneHot32((uint)((ins >> 20) & 0x1F)))
+			rd := regAddr(encodeOneHot32((uint)((ins >> 07) & 0x1F)))
 
 			output <- decoderOut{
 				ins:  ins,

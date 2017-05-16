@@ -3,6 +3,7 @@ package memory
 import (
 	"fmt"
 	"launchpad.net/gommap"
+	"log"
 	"os"
 	"sync"
 )
@@ -54,12 +55,12 @@ func (m *MemoryArray) WritePort(
 	we <-chan bool) {
 	go func() {
 		defer m.mem.Sync(gommap.MS_SYNC)
-
 		for e := range we {
 			a, da := <-addr
 			d, dv := <-data
 			if dv && da {
 				if e {
+					log.Printf("Writing %v to addr 0x%X", d, a)
 					if a < 0x80000000 {
 						m.mux.Lock()
 						for i, b := range d {
@@ -73,9 +74,9 @@ func (m *MemoryArray) WritePort(
 							fmt.Printf("%c", c)
 						}
 					}
-				} else {
-					return
 				}
+			} else {
+				return
 			}
 		}
 	}()

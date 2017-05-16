@@ -43,11 +43,8 @@ func (s *Processor) retireUnit(
 		defer close(nextValid)
 
 		for q := range qIn {
-			log.Printf("Retiring a instruction %+v", q)
-
 			var data uint32
 			valid := <-currValid
-			nValid := valid
 			rwe := true
 			memWe := false
 			brCmd := branchCmd{
@@ -76,15 +73,13 @@ func (s *Processor) retireUnit(
 				data = br.linkAddr
 				/* if a branch is taken, increment the validity flag
 				 * to execute only the valid flow  */
-				if brCmd.taken {
-					nValid = valid + 1
-				}
 			}
 
 			/* Case the validty flag of the current instruction
 			 * and the validity flag of the current flow mismatch
 			 * invalidate the instruction */
 			if valid != q.valid {
+				log.Printf("Canceling Instruction [q: %+v br: %+v data: %d rwe: %v mwe: %v]", q, brCmd, data, rwe, memWe)
 				brCmd.taken = false
 				rwe = false
 
@@ -97,7 +92,12 @@ func (s *Processor) retireUnit(
 				memoryWe <- true
 			}
 
-			nextValid <- nValid
+			if brCmd.taken {
+				nextValid <- valid + 1
+			} else {
+				nextValid <- valid
+			}
+
 			regWcmd <- retireRegwCmd{
 				we:   rwe,
 				data: data}

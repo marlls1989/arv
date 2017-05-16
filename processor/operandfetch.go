@@ -9,11 +9,11 @@ func (s *Processor) operandFetchUnit(
 	pcAddrIn <-chan uint32,
 	decodedIn <-chan decoderOut,
 	regDataIn <-chan regDataRet,
-	regLock <-chan uint32,
+	regLock <-chan regAddr,
 
 	dispatcherOut chan<- dispatcherInput,
 	regRcmdOut chan<- regReadCmd,
-	regDaddrOut chan<- uint32) {
+	regDaddrOut chan<- regAddr) {
 
 	go func() {
 
@@ -69,6 +69,7 @@ func (s *Processor) operandFetchUnit(
 				read := <-regDataIn
 				a = read.adata
 				b = read.bdata
+
 			case opFormatI:
 				for lock := range regLock {
 					if regAaddr&^lock == 0 {
@@ -92,23 +93,26 @@ func (s *Processor) operandFetchUnit(
 				read := <-regDataIn
 				a = read.adata
 				b = (uint32)((int32)(ins) >> 20)
+
 			case opFormatU:
+				<-regLock
 				regRcmdOut <- regReadCmd{
 					aaddr: 0,
 					baddr: 0}
-				<-regLock
 				a = pc
 				b = ins & 0xFFFFF000
+
 			case opFormatJ:
+				<-regLock
 				regRcmdOut <- regReadCmd{
 					aaddr: 0,
 					baddr: 0}
-				<-regLock
 				a = pc
 				b = (((uint32)((int32)(ins)>>12) & 0xFFF00000) |
 					(ins & 0x000FF000) |
 					((ins >> 9) & 0x800) |
 					((ins >> 20) & 0x7FE))
+
 			case opFormatS:
 				for lock := range regLock {
 					if (regAaddr&^lock == 0) || (regBaddr&^lock == 0) {
@@ -134,9 +138,13 @@ func (s *Processor) operandFetchUnit(
 				a = read.adata
 				b = (((uint32)((int32)(ins)>>20) & 0xFFFFFFE0) | ((ins >> 7) & 0x1F))
 				c = read.bdata
+
 			case opFormatB:
 				for lock := range regLock {
 					if (regAaddr&^lock == 0) || (regBaddr&^lock == 0) {
+						regRcmdOut <- regReadCmd{
+							aaddr: 0,
+							baddr: 0}
 						dispatcherOut <- dispatcherInput{
 							valid:  valid,
 							pcAddr: 0,
@@ -159,6 +167,7 @@ func (s *Processor) operandFetchUnit(
 					((ins << 4) & 0x800) |
 					((ins >> 20) & 0x7E0) |
 					((ins >> 7) & 0x1E))
+
 			case opFormatNop:
 				<-regLock
 				regRcmdOut <- regReadCmd{

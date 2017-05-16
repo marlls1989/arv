@@ -4,13 +4,44 @@ package processor
 
 import "fmt"
 
-const _xuOperation_name = "bypassB"
+const (
+	_xuOperation_name_0 = "bypassB"
+	_xuOperation_name_1 = "adderSumadderSubadderSltadderSltu"
+	_xuOperation_name_2 = "shifterLlshifterRlshifterRa"
+	_xuOperation_name_3 = "logicXorlogicOrlogicAnd"
+	_xuOperation_name_4 = "memoryLBmemoryLHmemoryLWmemoryLBUmemoryLHUmemorySBmemorySHmemorySW"
+	_xuOperation_name_5 = "branchEQbranchNEbranchLTbranchGEbranchLTUbranchGEUbranchJL"
+)
 
-var _xuOperation_index = [...]uint8{0, 7}
+var (
+	_xuOperation_index_0 = [...]uint8{0, 7}
+	_xuOperation_index_1 = [...]uint8{0, 8, 16, 24, 33}
+	_xuOperation_index_2 = [...]uint8{0, 9, 18, 27}
+	_xuOperation_index_3 = [...]uint8{0, 8, 15, 23}
+	_xuOperation_index_4 = [...]uint8{0, 8, 16, 24, 33, 42, 50, 58, 66}
+	_xuOperation_index_5 = [...]uint8{0, 8, 16, 24, 32, 41, 50, 58}
+)
 
 func (i xuOperation) String() string {
-	if i >= xuOperation(len(_xuOperation_index)-1) {
+	switch {
+	case i == 0:
+		return _xuOperation_name_0
+	case 16 <= i && i <= 19:
+		i -= 16
+		return _xuOperation_name_1[_xuOperation_index_1[i]:_xuOperation_index_1[i+1]]
+	case 32 <= i && i <= 34:
+		i -= 32
+		return _xuOperation_name_2[_xuOperation_index_2[i]:_xuOperation_index_2[i+1]]
+	case 48 <= i && i <= 50:
+		i -= 48
+		return _xuOperation_name_3[_xuOperation_index_3[i]:_xuOperation_index_3[i+1]]
+	case 64 <= i && i <= 71:
+		i -= 64
+		return _xuOperation_name_4[_xuOperation_index_4[i]:_xuOperation_index_4[i+1]]
+	case 80 <= i && i <= 86:
+		i -= 80
+		return _xuOperation_name_5[_xuOperation_index_5[i]:_xuOperation_index_5[i+1]]
+	default:
 		return fmt.Sprintf("xuOperation(%d)", i)
 	}
-	return _xuOperation_name[_xuOperation_index[i]:_xuOperation_index[i+1]]
 }

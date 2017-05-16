@@ -1,7 +1,7 @@
 package processor
 
 type regReadCmd struct {
-	aaddr, baddr uint32
+	aaddr, baddr regAddr
 }
 
 type regDataRet struct {
@@ -10,22 +10,22 @@ type regDataRet struct {
 
 func (s *Processor) registerBypass(
 	regWcmd <-chan retireRegwCmd,
-	regWaddrIn <-chan uint32,
+	regWaddrIn <-chan regAddr,
 	regRcmd <-chan regReadCmd,
 
 	regDataOut chan<- regDataRet) {
 
-	regWaddr := make(chan uint32)
+	regWaddr := make(chan regAddr)
 	regWdata := make(chan uint32)
 
 	s.regFile.WritePort(regWaddr, regWdata)
 
-	regAaddr := make(chan uint32)
+	regAaddr := make(chan regAddr)
 	regAdata := make(chan uint32)
 
 	s.regFile.ReadPort(regAaddr, regAdata)
 
-	regBaddr := make(chan uint32)
+	regBaddr := make(chan regAddr)
 	regBdata := make(chan uint32)
 
 	s.regFile.ReadPort(regBaddr, regBdata)
