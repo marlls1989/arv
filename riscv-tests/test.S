@@ -1,4 +1,5 @@
-start:
+	.global _entry
+_entry:
 	/* zero-initialize all registers */
 
 	addi x1, zero, 0
@@ -96,7 +97,7 @@ start:
 #	TEST(remu)
 
 
-	li a0,0xf00000e0
+	li a0,0x80001000
 	addi a1,zero,'D'
 	addi a2,zero,'O'
 	addi a3,zero,'N'
@@ -107,6 +108,7 @@ start:
 	sw a3,0(a0)
 	sw a4,0(a0)
 	sw a5,0(a0)
-
-	li	s10, 0xe0000000		# this will interrupt the simulation (assertion)
+.end:	
+	li	s10, 0x80000000		# this will interrupt the simulation (assertion)
 	sw	zero, 0(s10)
+	jal zero, .end
