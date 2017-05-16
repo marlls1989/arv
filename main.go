@@ -52,5 +52,6 @@ func main() {
 
 	<-mem.EndSimulation
 	proc.Stop()
+	log.Print("Finishing Simulation")
 	file.Close()
 }

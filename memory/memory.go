@@ -28,6 +28,11 @@ func MemoryArrayFromFile(file *os.File) (*MemoryArray, error) {
 	ret.mem = memory
 	ret.EndSimulation = make(chan struct{})
 
+	if err != nil {
+		//Force initialization
+		memory.Sync(gommap.MS_SYNC)
+	}
+
 	return ret, err
 }
 
@@ -43,6 +48,7 @@ func (m *MemoryArray) ReadPort(addr, lng <-chan uint32, data chan<- []byte) {
 					d = m.mem[a : a+l]
 					m.mux.Unlock()
 				} else {
+					log.Printf("Reading %d bytes from out of bounds memory location %x", l, a)
 					d = make([]byte, l)
 				}
 				data <- d
@@ -65,7 +71,7 @@ func (m *MemoryArray) WritePort(
 			d, dv := <-data
 			if dv && da {
 				if e {
-					log.Printf("Writing %v to addr 0x%X", d, a)
+					log.Printf("Writing %v to memory address %X", d, a)
 					if a < 0x80000000 {
 						m.mux.Lock()
 						for i, b := range d {
@@ -73,6 +79,7 @@ func (m *MemoryArray) WritePort(
 						}
 						m.mux.Unlock()
 					} else if a < 0x80001000 {
+						log.Print("Simulation End invoked")
 						close(m.EndSimulation)
 					} else {
 						for _, c := range d {
