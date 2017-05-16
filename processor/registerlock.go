@@ -13,9 +13,6 @@ func (s *Processor) reglockEl(
 		defer close(lockOut)
 		defer close(fifoOut)
 
-		<-s.start
-		fifoOut <- 0
-		lockOut <- 0
 		for in := range fifoIn {
 			l, lv := <-lockIn
 			if !lv {

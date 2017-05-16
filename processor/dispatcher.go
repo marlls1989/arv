@@ -1,10 +1,19 @@
 package processor
 
+import (
+	"fmt"
+	"log"
+)
+
 type dispatcherInput struct {
 	valid   uint8
 	pcAddr  uint32
 	xuOper  xuOperation
 	a, b, c uint32
+}
+
+func (d dispatcherInput) String() string {
+	return fmt.Sprintf("{valid:%v pcAddr:%X xuOper:%v a:%x b:%x c:%x}", d.valid, d.pcAddr, d.xuOper, d.a, d.b, d.c)
 }
 
 func (s *Processor) dispatcherUnit(
@@ -26,14 +35,10 @@ func (s *Processor) dispatcherUnit(
 		defer close(memoryOut)
 		defer close(branchOut)
 
-		<-s.start
-		bypassOut <- 0
-		programQOut <- programElement{
-			valid: 255,
-			unit:  xuBypassSel}
 		for in := range dispatcherIn {
-
 			xuSel := xuSelector(in.xuOper >> 4)
+
+			log.Printf("Dispatching instruction %v", in)
 
 			switch xuSel {
 			case xuBypassSel:

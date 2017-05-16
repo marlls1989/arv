@@ -20,7 +20,7 @@ func (s *Processor) retireUnit(
 
 	regWcmd chan<- retireRegwCmd,
 	memoryWe chan<- bool,
-	branchOut chan<- branchCmd) {
+	branchOut chan<- uint32) {
 
 	currValid := make(chan uint8)
 	nextValid := make(chan uint8)
@@ -43,12 +43,11 @@ func (s *Processor) retireUnit(
 		defer close(nextValid)
 
 		for q := range qIn {
-			var data uint32
+			var data, brTarget uint32
 			valid := <-currValid
 			rwe := true
 			memWe := false
-			brCmd := branchCmd{
-				taken: false}
+			brTaken := false
 
 			/* Selectively handshake the instruction unit
 			 * acording to program order as defined by the queue */
@@ -67,8 +66,8 @@ func (s *Processor) retireUnit(
 				data = meminfo.value
 			case xuBranchSel:
 				br := <-branchIn
-				brCmd.taken = br.taken
-				brCmd.target = br.target
+				brTaken = br.taken
+				brTarget = br.target
 				rwe = br.link
 				data = br.linkAddr
 				/* if a branch is taken, increment the validity flag
@@ -79,8 +78,8 @@ func (s *Processor) retireUnit(
 			 * and the validity flag of the current flow mismatch
 			 * invalidate the instruction */
 			if valid != q.valid {
-				log.Printf("Canceling Instruction [q: %+v br: %+v data: %d rwe: %v mwe: %v]", q, brCmd, data, rwe, memWe)
-				brCmd.taken = false
+				log.Printf("Canceling Instruction [q: %+v br: %v brTarget:%x data: %x rwe: %v mwe: %v]", q, brTaken, brTarget, data, rwe, memWe)
+				brTaken = false
 				rwe = false
 
 				/* memoryWe is peculiar, it should not be handshake unless the memory unit
@@ -88,11 +87,14 @@ func (s *Processor) retireUnit(
 				if memWe {
 					memoryWe <- false
 				}
-			} else if memWe {
-				memoryWe <- true
+			} else {
+				log.Printf("Retiring Instruction [q: %+v br: %v brTarget:%x data: %x rwe: %v mwe: %v]", q, brTaken, brTarget, data, rwe, memWe)
+				if memWe {
+					memoryWe <- true
+				}
 			}
 
-			if brCmd.taken {
+			if brTaken {
 				nextValid <- valid + 1
 			} else {
 				nextValid <- valid
@@ -101,11 +103,10 @@ func (s *Processor) retireUnit(
 			regWcmd <- retireRegwCmd{
 				we:   rwe,
 				data: data}
-			if brCmd.taken {
-				branchOut <- brCmd
+			if brTaken {
+				branchOut <- brTarget
 			}
 		}
-
 	}()
 
 }

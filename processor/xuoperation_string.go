@@ -7,8 +7,8 @@ import "fmt"
 const (
 	_xuOperation_name_0 = "bypassB"
 	_xuOperation_name_1 = "adderSumadderSubadderSltadderSltu"
-	_xuOperation_name_2 = "shifterLlshifterRlshifterRa"
-	_xuOperation_name_3 = "logicXorlogicOrlogicAnd"
+	_xuOperation_name_2 = "logicXorlogicOrlogicAnd"
+	_xuOperation_name_3 = "shifterLlshifterRlshifterRa"
 	_xuOperation_name_4 = "memoryLBmemoryLHmemoryLWmemoryLBUmemoryLHUmemorySBmemorySHmemorySW"
 	_xuOperation_name_5 = "branchEQbranchNEbranchLTbranchGEbranchLTUbranchGEUbranchJL"
 )
@@ -16,8 +16,8 @@ const (
 var (
 	_xuOperation_index_0 = [...]uint8{0, 7}
 	_xuOperation_index_1 = [...]uint8{0, 8, 16, 24, 33}
-	_xuOperation_index_2 = [...]uint8{0, 9, 18, 27}
-	_xuOperation_index_3 = [...]uint8{0, 8, 15, 23}
+	_xuOperation_index_2 = [...]uint8{0, 8, 15, 23}
+	_xuOperation_index_3 = [...]uint8{0, 9, 18, 27}
 	_xuOperation_index_4 = [...]uint8{0, 8, 16, 24, 33, 42, 50, 58, 66}
 	_xuOperation_index_5 = [...]uint8{0, 8, 16, 24, 32, 41, 50, 58}
 )

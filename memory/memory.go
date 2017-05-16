@@ -31,15 +31,20 @@ func MemoryArrayFromFile(file *os.File) (*MemoryArray, error) {
 	return ret, err
 }
 
-func (m *MemoryArray) ReadPort(addr, len <-chan uint32, data chan<- []byte) {
+func (m *MemoryArray) ReadPort(addr, lng <-chan uint32, data chan<- []byte) {
 	go func() {
 		defer close(data)
 		for a := range addr {
-			l, lv := <-len
+			var d []byte
+			l, lv := <-lng
 			if lv {
-				m.mux.Lock()
-				d := m.mem[a : a+l]
-				m.mux.Unlock()
+				if a+l < uint32(len(m.mem)) {
+					m.mux.Lock()
+					d = m.mem[a : a+l]
+					m.mux.Unlock()
+				} else {
+					d = make([]byte, l)
+				}
 				data <- d
 			} else {
 				return

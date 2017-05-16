@@ -9,12 +9,12 @@ type xuSelector uint8
 
 //go:generate stringer -type=xuSelector
 const (
-	xuBypassSel xuSelector = 0x00
-	xuAdderSel             = 0x01
-	xuLogicSel             = 0x02
-	xuShiftSel             = 0x03
-	xuMemorySel            = 0x04
-	xuBranchSel            = 0x05
+	xuBypassSel xuSelector = iota
+	xuAdderSel
+	xuLogicSel
+	xuShiftSel
+	xuMemorySel
+	xuBranchSel
 )
 
 type programElement struct {
@@ -33,10 +33,6 @@ func (s *Processor) prgQElement(
 	go func() {
 		defer close(fifoOut)
 
-		<-s.start
-		fifoOut <- programElement{
-			valid: 255,
-			unit:  xuBypassSel}
 		for in := range fifoIn {
 			fifoOut <- in
 		}

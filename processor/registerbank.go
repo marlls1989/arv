@@ -1,6 +1,7 @@
 package processor
 
 import (
+	"log"
 	"sync"
 )
 
@@ -40,9 +41,9 @@ func (r *regFile) WritePort(addr <-chan regAddr, data <-chan uint32) {
 			if !av {
 				return
 			}
-
 			ad := decodeOneHot32(uint32(a))
 			if len(ad) != 0 && ad[0] != 0 {
+				log.Printf("Writing %x to register %v", d, a)
 				r.mux.Lock()
 				r.reg[ad[0]-1] = d
 				r.mux.Unlock()

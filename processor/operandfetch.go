@@ -23,6 +23,16 @@ func (s *Processor) operandFetchUnit(
 		defer close(regDaddrOut)
 		defer close(dispatcherOut)
 
+		<-s.start
+		dispatcherOut <- dispatcherInput{
+			valid:  255,
+			pcAddr: 0,
+			xuOper: bypassB,
+			a:      0,
+			b:      0,
+			c:      0}
+		regDaddrOut <- 0
+
 		for decoded := range decodedIn {
 			valid, vvalid := <-validIn
 			pc, vpc := <-pcAddrIn
@@ -31,7 +41,7 @@ func (s *Processor) operandFetchUnit(
 				return
 			}
 
-			log.Printf("OPF Received decoded instruction: %+v pc: 0x%X valid: %v", decoded, pc, valid)
+			log.Printf("Decoded %+v pc:%X valid: %v", decoded, pc, valid)
 
 			ins := decoded.ins
 			fmt := decoded.fmt

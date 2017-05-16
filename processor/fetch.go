@@ -4,15 +4,10 @@ import (
 	"log"
 )
 
-type branchCmd struct {
-	taken  bool
-	target uint32
-}
-
 func (s *Processor) nextPcUnit(
 	currPC <-chan uint32,
 	currValid <-chan uint8,
-	branch <-chan branchCmd,
+	branch <-chan uint32,
 	fetchAddr, nextPc chan<- uint32,
 	nextValid chan<- uint8) {
 
@@ -31,13 +26,9 @@ func (s *Processor) nextPcUnit(
 			valid := <-currValid
 			select {
 			case br := <-branch:
-				if br.taken {
-					target = br.target
-					valid = valid + 1
-					log.Printf("Branching to 0x%X", target)
-				} else {
-					target = pc + 4
-				}
+				target = br
+				valid = valid + 1
+				log.Printf("Branching to 0x%X", target)
 			default: //Uncouple the fetch loop by taking branch completeness as a cue
 				target = pc + 4
 			}
@@ -49,7 +40,7 @@ func (s *Processor) nextPcUnit(
 }
 
 func (s *Processor) fetchUnit(
-	branch <-chan branchCmd,
+	branch <-chan uint32,
 
 	pcAddr chan<- uint32,
 	instruction chan<- []byte,

@@ -4,9 +4,9 @@ package processor
 
 import "fmt"
 
-const _xuSelector_name = "xuBypassSel"
+const _xuSelector_name = "xuBypassSelxuAdderSelxuLogicSelxuShiftSelxuMemorySelxuBranchSel"
 
-var _xuSelector_index = [...]uint8{0, 11}
+var _xuSelector_index = [...]uint8{0, 11, 21, 31, 41, 52, 63}
 
 func (i xuSelector) String() string {
 	if i >= xuSelector(len(_xuSelector_index)-1) {

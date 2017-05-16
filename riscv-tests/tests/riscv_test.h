@@ -29,8 +29,8 @@ TEST_FUNC_NAME:																	\
  .balign 4;																			\
 .prname_done:																		\
  addi	a1,zero,'.';															\
- sw	a1,0(a2);																		\
- sw	a1,0(a2);
+ sb	a1,0(a2);																		\
+ sb	a1,0(a2);
 
 #define RVTEST_PASS															\
 	li	  a0,0x80001000; 													\

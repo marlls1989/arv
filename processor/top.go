@@ -17,7 +17,7 @@ func ConstructProcessor(mem memory.Memory) *Processor {
 	/* Creating an unitialised queue for branch commands
 	 * to acommodate NOPs inserted by the execution loop
 	 * into the control loop */
-	brCmd := make(chan branchCmd, 2)
+	brCmd := make(chan uint32, 2)
 	instruction := make(chan []byte)
 	fetchValid := make(chan uint8)
 	fetchPcAddr := make(chan uint32)

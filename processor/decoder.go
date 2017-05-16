@@ -11,30 +11,30 @@ type xuOperation uint8
 
 //go:generate stringer -type=xuOperation
 const (
-	bypassB xuOperation = iota
+	bypassB xuOperation = xuOperation(xuBypassSel<<4) + iota
 )
 
 const (
-	adderSum xuOperation = 0x10 + iota
+	adderSum xuOperation = xuOperation(xuAdderSel<<4) + iota
 	adderSub
 	adderSlt
 	adderSltu
 )
 
 const (
-	shifterLl xuOperation = 0x20 + iota
-	shifterRl
-	shifterRa
-)
-
-const (
-	logicXor xuOperation = 0x30 + iota
+	logicXor xuOperation = xuOperation(xuLogicSel<<4) + iota
 	logicOr
 	logicAnd
 )
 
 const (
-	memoryLB xuOperation = 0x40 + iota
+	shifterLl xuOperation = xuOperation(xuShiftSel<<4) + iota
+	shifterRl
+	shifterRa
+)
+
+const (
+	memoryLB xuOperation = xuOperation(xuMemorySel<<4) + iota
 	memoryLH
 	memoryLW
 	memoryLBU
@@ -45,7 +45,7 @@ const (
 )
 
 const (
-	branchEQ xuOperation = 0x50 + iota
+	branchEQ xuOperation = xuOperation(xuBranchSel<<4) + iota
 	branchNE
 	branchLT
 	branchGE
