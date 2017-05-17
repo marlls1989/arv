@@ -6,7 +6,6 @@ import (
 
 func (s *Processor) reglockEl(
 	fifoIn <-chan regAddr,
-	lockIn <-chan uint32,
 	fifoOut chan<- regAddr,
 	lockOut chan<- uint32) {
 
@@ -18,13 +17,8 @@ func (s *Processor) reglockEl(
 		fifoOut <- 0
 		lockOut <- 0
 		for in := range fifoIn {
-			l, lv := <-lockIn
-			if !lv {
-				return
-			}
-			lock := (uint32(in) | l) & 0xFFFFFFFE
 			fifoOut <- in
-			lockOut <- lock
+			lockOut <- uint32(in)
 		}
 	}()
 }
@@ -50,23 +44,27 @@ func (s *Processor) registerLock(
 		lock[i] = make(chan uint32)
 	}
 
-	go func() {
-		defer close(lock[0])
-
-		for {
-			select {
-			case lock[0] <- 0:
-			case <-s.quit:
-				return
-			}
-		}
-	}()
-
-	s.reglockEl(fifoIn, lock[0], fifo[0], lock[1])
+	s.reglockEl(fifoIn, fifo[0], lock[0])
 
 	for i := 1; i < stages-1; i++ {
-		s.reglockEl(fifo[i-1], lock[i], fifo[i], lock[i+1])
+		s.reglockEl(fifo[i-1], fifo[i], lock[i])
 	}
 
-	s.reglockEl(fifo[stages-2], lock[stages-1], fifoOut, lockedRegs)
+	s.reglockEl(fifo[stages-2], fifoOut, lock[stages-1])
+
+	go func() {
+		defer close(lockedRegs)
+
+		for {
+			var out uint32 = 0
+			for i := len(lock); i > 0; i-- {
+				in, vin := <-lock[i-1]
+				if !vin {
+					return
+				}
+				out |= in & 0xFFFFFFFE
+			}
+			lockedRegs <- out
+		}
+	}()
 }
