@@ -5,3 +5,11 @@
 memdump
 qdi-riscv
 .DS_Store
+*.o
+*.hex
+*.axf
+*.cnt
+*.map
+*.lst
+*.sec
+*.bin

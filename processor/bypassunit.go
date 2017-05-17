@@ -10,7 +10,6 @@ func (s *Processor) bypassEl(input <-chan uint32, output chan<- uint32) {
 
 		<-s.start
 		output <- 0
-
 		for i := range input {
 			output <- i
 		}

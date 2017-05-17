@@ -173,7 +173,7 @@ func (s *Processor) decoderUnit(
 				op = bypassB
 			case 0x37: //LUI
 				op = bypassB
-			case 0x1F: //AUIPC
+			case 0x17: //AUIPC
 				op = adderSum
 			case 0x6F: //JAL
 				op = branchJL
