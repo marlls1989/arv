@@ -11,20 +11,21 @@ import (
 )
 
 func main() {
-	// Initialize the runtime for best using the available cores
-	runtime.GOMAXPROCS(runtime.NumCPU())
-
-	sizePtr := flag.Int64("memsize", -1, "Truncate memory file to size in kbytes")
+	sizePtr := flag.Int64("memsize", -1, "Truncate memory file to `size` in kbytes")
+	nProcs := flag.Int("jobs", runtime.NumCPU(), "Number of concurent execution `threads`")
+	memfile := flag.String("memfile", "", "Memory dump `file name` containing the binary file name")
 
 	flag.Parse()
 
-	args := flag.Args()
+	// Initialize the runtime for best using the available cores
+	runtime.GOMAXPROCS(*nProcs)
 
-	if len(args) < 1 {
-		fmt.Fprintf(os.Stderr, "USAGE: %s [options] <memorydump file>", os.Args[0])
+	if *memfile == "" {
+		fmt.Fprintln(os.Stderr, "Required parameter -memfile not defined")
+		os.Exit(-1)
 	}
 
-	file, err := os.OpenFile(args[0], os.O_RDWR|os.O_CREATE, 0666)
+	file, err := os.OpenFile(*memfile, os.O_RDWR|os.O_CREATE, 0666)
 	if err != nil {
 		log.Fatal(err)
 		os.Exit(-1)

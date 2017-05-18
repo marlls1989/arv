@@ -88,13 +88,15 @@ func (s *Processor) memoryUnit(
 				out.writeRequest = true
 			case memoryLB:
 				val := <-rdata
-				out.value = uint32(int32(val[0]))
+				v := int32(val[0])
+				out.value = uint32(v)
 			case memoryLBU:
 				val := <-rdata
 				out.value = uint32(val[0])
 			case memoryLH:
 				val := <-rdata
-				out.value = uint32(int32(binary.LittleEndian.Uint16(val)))
+				v := int32(binary.LittleEndian.Uint16(val))
+				out.value = uint32(v)
 			case memoryLHU:
 				val := <-rdata
 				out.value = uint32(binary.LittleEndian.Uint16(val))

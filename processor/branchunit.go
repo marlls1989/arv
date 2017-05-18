@@ -30,7 +30,7 @@ func (s *Processor) branchUnit(
 			out := branchOutput{
 				taken:    false,
 				target:   in.pc + in.c,
-				linkAddr: in.pc,
+				linkAddr: in.pc + 4,
 				link:     false}
 
 			switch in.op {
