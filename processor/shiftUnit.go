@@ -28,7 +28,7 @@ func (s *processor) shifterUnit(
 			case shifterRl:
 				buffer <- uint32(in.a) >> (in.b & 0x1F)
 			case shifterRa:
-				buffer <- uint32(int32(in.a) >> in.b & 0x1F)
+				buffer <- uint32(int32(in.a) >> (in.b & 0x1F))
 			}
 		}
 	}()
