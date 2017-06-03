@@ -5,7 +5,7 @@ type adderInput struct {
 	op   xuOperation
 }
 
-func (s *Processor) adderUnit(
+func (s *processor) adderUnit(
 	input <-chan adderInput,
 	output chan<- uint32) {
 

@@ -4,7 +4,7 @@ import (
 	"log"
 )
 
-func (s *Processor) nextPcUnit(
+func (s *processor) nextPcUnit(
 	currPC <-chan uint32,
 	currValid <-chan uint8,
 	branch <-chan uint32,
@@ -28,7 +28,9 @@ func (s *Processor) nextPcUnit(
 			case br := <-branch:
 				target = br
 				valid = valid + 1
-				log.Printf("Branching to 0x%X", target)
+				if s.Debug {
+					log.Printf("Branching to 0x%X", target)
+				}
 			default: //Uncouple the fetch loop by taking branch completeness as a cue
 				target = pc + 4
 			}
@@ -39,7 +41,7 @@ func (s *Processor) nextPcUnit(
 	}()
 }
 
-func (s *Processor) fetchUnit(
+func (s *processor) fetchUnit(
 	branch <-chan uint32,
 
 	pcAddr chan<- uint32,

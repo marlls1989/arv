@@ -4,7 +4,7 @@ import (
 	"log"
 )
 
-func (s *Processor) reglockEl(
+func (s *processor) reglockEl(
 	fifoIn <-chan regAddr,
 	fifoOut chan<- regAddr,
 	lockOut chan<- uint32) {
@@ -23,7 +23,7 @@ func (s *Processor) reglockEl(
 	}()
 }
 
-func (s *Processor) registerLock(
+func (s *processor) registerLock(
 	fifoIn <-chan regAddr,
 	fifoOut chan<- regAddr,
 	lockedRegs chan<- uint32,

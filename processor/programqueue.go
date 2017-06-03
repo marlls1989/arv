@@ -26,7 +26,7 @@ func (p programElement) String() string {
 	return fmt.Sprintf("{valid:%v unit:%v}", p.valid, p.unit)
 }
 
-func (s *Processor) prgQElement(
+func (s *processor) prgQElement(
 	fifoIn <-chan programElement,
 	fifoOut chan<- programElement) {
 
@@ -44,7 +44,7 @@ func (s *Processor) prgQElement(
 	}()
 }
 
-func (s *Processor) programQueue(
+func (s *processor) programQueue(
 	fifoIn <-chan programElement,
 	fifoOut chan<- programElement,
 	depth int) {

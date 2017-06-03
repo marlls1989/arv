@@ -8,7 +8,7 @@ type regDataRet struct {
 	adata, bdata uint32
 }
 
-func (s *Processor) registerBypass(
+func (s *processor) registerBypass(
 	regWcmd <-chan retireRegwCmd,
 	regWaddrIn <-chan regAddr,
 	regRcmd <-chan regReadCmd,

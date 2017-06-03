@@ -14,6 +14,8 @@ func main() {
 	sizePtr := flag.Int64("memsize", -1, "Truncate memory file to `size` in kbytes")
 	nProcs := flag.Int("jobs", runtime.NumCPU(), "Number of concurent execution `threads`")
 	memfile := flag.String("memfile", "", "Memory dump `file name` containing the binary file name")
+	memdebug := flag.Bool("memdebug", false, "Logs memory writes to stderr")
+	coreedebug := flag.Bool("coredebug", false, "Logs instructions flow to stderr")
 
 	flag.Parse()
 
@@ -28,7 +30,6 @@ func main() {
 	file, err := os.OpenFile(*memfile, os.O_RDWR|os.O_CREATE, 0666)
 	if err != nil {
 		log.Fatal(err)
-		os.Exit(-1)
 	}
 	log.Print("Memdump file opened")
 
@@ -39,6 +40,8 @@ func main() {
 
 	mem, err := memory.MemoryArrayFromFile(file)
 
+	mem.Debug = *memdebug
+
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -47,6 +50,8 @@ func main() {
 
 	proc := processor.ConstructProcessor(mem)
 	log.Print("Processor model instantiated")
+
+	proc.Debug = *coreedebug
 
 	proc.Start()
 	log.Print("Simulation started")

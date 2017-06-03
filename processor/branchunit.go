@@ -10,7 +10,7 @@ type branchOutput struct {
 	linkAddr, target uint32
 }
 
-func (s *Processor) branchUnit(
+func (s *processor) branchUnit(
 	input <-chan branchInput,
 	output chan<- branchOutput) {
 

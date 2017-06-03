@@ -4,9 +4,7 @@ import (
 	"log"
 )
 
-func (s *Processor) operandFetchUnit(
-	validIn <-chan uint8,
-	pcAddrIn <-chan uint32,
+func (s *processor) operandFetchUnit(
 	decodedIn <-chan decoderOut,
 	regDataIn <-chan regDataRet,
 	regLock <-chan uint32,
@@ -24,14 +22,12 @@ func (s *Processor) operandFetchUnit(
 		defer close(dispatcherOut)
 
 		for decoded := range decodedIn {
-			valid, vvalid := <-validIn
-			pc, vpc := <-pcAddrIn
+			valid := decoded.valid
+			pc := decoded.pc
 
-			if !vvalid || !vpc {
-				return
+			if s.Debug {
+				log.Printf("Decoded %+v pc:%X valid: %v", decoded, pc, valid)
 			}
-
-			log.Printf("Decoded %+v pc:%X valid: %v", decoded, pc, valid)
 
 			ins := decoded.ins
 			fmt := decoded.fmt
@@ -48,7 +44,9 @@ func (s *Processor) operandFetchUnit(
 			case opFormatR:
 				for lock := range regLock {
 					if (uint32(regAaddr)&^lock == 0) || (uint32(regBaddr)&^lock == 0) {
-						log.Printf("Issuing bubble due to register lock %v", regAddr(lock))
+						if s.Debug {
+							log.Printf("Issuing bubble due to register lock %v", regAddr(lock))
+						}
 						regRcmdOut <- regReadCmd{
 							aaddr: 0,
 							baddr: 0}
@@ -74,7 +72,9 @@ func (s *Processor) operandFetchUnit(
 			case opFormatI:
 				for lock := range regLock {
 					if uint32(regAaddr)&^lock == 0 {
-						log.Printf("Issuing bubble due to register lock %v", regAddr(lock))
+						if s.Debug {
+							log.Printf("Issuing bubble due to register lock %v", regAddr(lock))
+						}
 						regRcmdOut <- regReadCmd{
 							aaddr: 0,
 							baddr: 0}
@@ -118,7 +118,9 @@ func (s *Processor) operandFetchUnit(
 			case opFormatS:
 				for lock := range regLock {
 					if (uint32(regAaddr)&^lock == 0) || (uint32(regBaddr)&^lock == 0) {
-						log.Printf("Issuing bubble due to register lock %v", regAddr(lock))
+						if s.Debug {
+							log.Printf("Issuing bubble due to register lock %v", regAddr(lock))
+						}
 						regRcmdOut <- regReadCmd{
 							aaddr: 0,
 							baddr: 0}
@@ -145,7 +147,9 @@ func (s *Processor) operandFetchUnit(
 			case opFormatB:
 				for lock := range regLock {
 					if (uint32(regAaddr)&^lock == 0) || (uint32(regBaddr)&^lock == 0) {
-						log.Printf("Issuing bubble due to register lock %v", regAddr(lock))
+						if s.Debug {
+							log.Printf("Issuing bubble due to register lock %v", regAddr(lock))
+						}
 						regRcmdOut <- regReadCmd{
 							aaddr: 0,
 							baddr: 0}

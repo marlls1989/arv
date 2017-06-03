@@ -9,7 +9,7 @@ type retireRegwCmd struct {
 	data uint32
 }
 
-func (s *Processor) retireUnit(
+func (s *processor) retireUnit(
 	qIn <-chan programElement,
 	bypassIn <-chan uint32,
 	adderIn <-chan uint32,
@@ -78,7 +78,9 @@ func (s *Processor) retireUnit(
 			 * and the validity flag of the current flow mismatch
 			 * invalidate the instruction */
 			if valid != q.valid {
-				log.Printf("Canceling Instruction [q: %+v br: %v brTarget:%x data: %x rwe: %v mwe: %v]", q, brTaken, brTarget, data, rwe, memWe)
+				if s.Debug {
+					log.Printf("Canceling Instruction [q: %+v br: %v brTarget:%x data: %x rwe: %v mwe: %v]", q, brTaken, brTarget, data, rwe, memWe)
+				}
 				brTaken = false
 				rwe = false
 
@@ -88,7 +90,9 @@ func (s *Processor) retireUnit(
 					memoryWe <- false
 				}
 			} else {
-				log.Printf("Retiring Instruction [q: %+v br: %v brTarget:%x data: %x rwe: %v mwe: %v]", q, brTaken, brTarget, data, rwe, memWe)
+				if s.Debug {
+					log.Printf("Retiring Instruction [q: %+v br: %v brTarget:%x data: %x rwe: %v mwe: %v]", q, brTaken, brTarget, data, rwe, memWe)
+				}
 				if memWe {
 					memoryWe <- true
 				}

@@ -5,7 +5,7 @@ type shifterInput struct {
 	a, b uint32
 }
 
-func (s *Processor) shifterUnit(
+func (s *processor) shifterUnit(
 	input <-chan shifterInput,
 	output chan<- uint32) {
 

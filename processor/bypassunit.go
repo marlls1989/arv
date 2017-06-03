@@ -4,7 +4,7 @@ import (
 	"log"
 )
 
-func (s *Processor) bypassEl(input <-chan uint32, output chan<- uint32) {
+func (s *processor) bypassEl(input <-chan uint32, output chan<- uint32) {
 	go func() {
 		defer close(output)
 
@@ -16,7 +16,7 @@ func (s *Processor) bypassEl(input <-chan uint32, output chan<- uint32) {
 	}()
 }
 
-func (s *Processor) bypassUnit(input <-chan uint32, output chan<- uint32, depth int) {
+func (s *processor) bypassUnit(input <-chan uint32, output chan<- uint32, depth int) {
 	if depth < 2 {
 		log.Panic("bypassunit queue depth must be at least 2")
 	}

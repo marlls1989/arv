@@ -13,14 +13,15 @@ type Memory interface {
 	WritePort(addr <-chan uint32, data <-chan []byte, we <-chan bool)
 }
 
-type MemoryArray struct {
+type memoryArray struct {
 	mem           gommap.MMap
 	mux           sync.Mutex
 	EndSimulation chan struct{}
+	Debug         bool
 }
 
-func MemoryArrayFromFile(file *os.File) (*MemoryArray, error) {
-	ret := new(MemoryArray)
+func MemoryArrayFromFile(file *os.File) (*memoryArray, error) {
+	ret := new(memoryArray)
 
 	memory, err :=
 		gommap.Map(file.Fd(), gommap.PROT_READ|gommap.PROT_WRITE, gommap.MAP_SHARED)
@@ -36,7 +37,7 @@ func MemoryArrayFromFile(file *os.File) (*MemoryArray, error) {
 	return ret, err
 }
 
-func (m *MemoryArray) ReadPort(addr, lng <-chan uint32, data chan<- []byte) {
+func (m *memoryArray) ReadPort(addr, lng <-chan uint32, data chan<- []byte) {
 	go func() {
 		defer close(data)
 		for a := range addr {
@@ -48,7 +49,9 @@ func (m *MemoryArray) ReadPort(addr, lng <-chan uint32, data chan<- []byte) {
 					d = m.mem[a : a+l]
 					m.mux.Unlock()
 				} else {
-					log.Printf("Reading %d bytes from out of bounds memory location %x", l, a)
+					if m.Debug {
+						log.Printf("Reading %d bytes from out of bounds memory location %x", l, a)
+					}
 					d = make([]byte, l)
 				}
 				data <- d
@@ -60,7 +63,7 @@ func (m *MemoryArray) ReadPort(addr, lng <-chan uint32, data chan<- []byte) {
 
 }
 
-func (m *MemoryArray) WritePort(
+func (m *memoryArray) WritePort(
 	addr <-chan uint32,
 	data <-chan []byte,
 	we <-chan bool) {
@@ -71,7 +74,9 @@ func (m *MemoryArray) WritePort(
 			d, dv := <-data
 			if dv && da {
 				if e {
-					log.Printf("Writing %v to memory address %X", d, a)
+					if m.Debug {
+						log.Printf("Writing %v to memory address %X", d, a)
+					}
 					if a < 0x80000000 {
 						m.mux.Lock()
 						for i, b := range d {
@@ -79,7 +84,9 @@ func (m *MemoryArray) WritePort(
 						}
 						m.mux.Unlock()
 					} else if a < 0x80001000 {
-						log.Print("Simulation End invoked")
+						if m.Debug {
+							log.Print("Simulation End invoked")
+						}
 						close(m.EndSimulation)
 					} else {
 						for _, c := range d {

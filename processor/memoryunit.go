@@ -14,7 +14,7 @@ type memoryUnitOutput struct {
 	value        uint32
 }
 
-func (s *Processor) memoryUnit(
+func (s *processor) memoryUnit(
 	input <-chan memoryUnitInput,
 	we <-chan bool,
 	output chan<- memoryUnitOutput) {

@@ -5,7 +5,7 @@ type logicInput struct {
 	op   xuOperation
 }
 
-func (s *Processor) logicUnit(
+func (s *processor) logicUnit(
 	input <-chan logicInput,
 	output chan<- uint32) {
 

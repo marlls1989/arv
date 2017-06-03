@@ -104,6 +104,8 @@ const (
 )
 
 type decoderOut struct {
+	pc               uint32
+	valid            uint8
 	ins              uint32
 	regA, regB, regD regAddr
 	op               xuOperation
@@ -114,35 +116,24 @@ func (d decoderOut) String() string {
 	return fmt.Sprintf("{ins:%08X regA:%v regB:%v regD:%v op:%v fmt:%v}", d.ins, d.regA, d.regB, d.regD, d.op, d.fmt)
 }
 
-func (s *Processor) decoderUnit(
+func (s *processor) decoderUnit(
 	validIn <-chan uint8,
 	pcAddrIn <-chan uint32,
 	instructionIn <-chan []byte,
 
-	validOut chan<- uint8,
-	pcAddrOut chan<- uint32,
 	output chan<- decoderOut) {
-
-	go func() {
-		defer close(pcAddrOut)
-
-		for i := range pcAddrIn {
-			pcAddrOut <- i
-		}
-	}()
-
-	go func() {
-		defer close(validOut)
-
-		for i := range validIn {
-			validOut <- i
-		}
-	}()
 
 	go func() {
 		defer close(output)
 
 		for i := range instructionIn {
+			pc, pe := <-pcAddrIn
+			valid, ve := <-validIn
+
+			if !(pe || ve) {
+				return
+			}
+
 			var fmt opFormat
 			var op xuOperation
 
@@ -164,7 +155,9 @@ func (s *Processor) decoderUnit(
 			case 0xFF:
 				fmt = opFormatNop
 			default:
-				log.Print("Decoding unknown instruction as NOP")
+				if s.Debug {
+					log.Printf("Decoding unknown instruction at %X as NOP", pc)
+				}
 				fmt = opFormatNop
 			}
 
@@ -254,12 +247,14 @@ func (s *Processor) decoderUnit(
 			rd := regAddr(encodeOneHot32((uint)((ins >> 07) & 0x1F)))
 
 			output <- decoderOut{
-				ins:  ins,
-				fmt:  fmt,
-				op:   op,
-				regA: ra,
-				regB: rb,
-				regD: rd}
+				pc:    pc,
+				valid: valid,
+				ins:   ins,
+				fmt:   fmt,
+				op:    op,
+				regA:  ra,
+				regB:  rb,
+				regD:  rd}
 		}
 	}()
 }

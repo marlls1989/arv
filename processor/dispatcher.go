@@ -16,7 +16,7 @@ func (d dispatcherInput) String() string {
 	return fmt.Sprintf("{valid:%v pcAddr:%X xuOper:%v a:%x b:%x c:%x}", d.valid, d.pcAddr, d.xuOper, d.a, d.b, d.c)
 }
 
-func (s *Processor) dispatcherUnit(
+func (s *processor) dispatcherUnit(
 	dispatcherIn <-chan dispatcherInput,
 
 	programQOut chan<- programElement,
@@ -43,8 +43,9 @@ func (s *Processor) dispatcherUnit(
 
 		for in := range dispatcherIn {
 			xuSel := xuSelector(in.xuOper >> 4)
-
-			log.Printf("Dispatching instruction %v", in)
+			if s.Debug {
+				log.Printf("Dispatching instruction %v", in)
+			}
 
 			switch xuSel {
 			case xuBypassSel:

@@ -7,8 +7,8 @@ import (
 /* This function instanciate a new processor unit
  * calling each module constructor and constructing the interconect */
 
-func ConstructProcessor(mem memory.Memory) *Processor {
-	proc := new(Processor)
+func ConstructProcessor(mem memory.Memory) *processor {
+	proc := new(processor)
 
 	proc.start = make(chan struct{})
 	proc.quit = make(chan struct{})
@@ -24,12 +24,9 @@ func ConstructProcessor(mem memory.Memory) *Processor {
 
 	proc.fetchUnit(brCmd, fetchPcAddr, instruction, fetchValid)
 
-	decoderValid := make(chan uint8)
-	decoderPcAddr := make(chan uint32)
 	decoderOutput := make(chan decoderOut)
 
-	proc.decoderUnit(fetchValid, fetchPcAddr, instruction,
-		decoderValid, decoderPcAddr, decoderOutput)
+	proc.decoderUnit(fetchValid, fetchPcAddr, instruction, decoderOutput)
 
 	regLock := make(chan uint32)
 	regRData := make(chan regDataRet)
@@ -37,8 +34,7 @@ func ConstructProcessor(mem memory.Memory) *Processor {
 	regRcmd := make(chan regReadCmd)
 	regDaddrIn := make(chan regAddr)
 
-	proc.operandFetchUnit(decoderValid, decoderPcAddr, decoderOutput,
-		regRData, regLock, dispatcherCmd, regRcmd, regDaddrIn)
+	proc.operandFetchUnit(decoderOutput, regRData, regLock, dispatcherCmd, regRcmd, regDaddrIn)
 
 	regDaddrOut := make(chan regAddr)
 	proc.registerLock(regDaddrIn, regDaddrOut, regLock, 4)

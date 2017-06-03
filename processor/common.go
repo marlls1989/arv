@@ -5,11 +5,12 @@ import (
 	"log"
 )
 
-type Processor struct {
+type processor struct {
 	start, quit chan struct{}
 	Memory      memory.Memory
 	regFile     regFile
 	startPC     uint32
+	Debug       bool
 }
 
 func encodeOneHot32(val ...uint) (ret uint32) {
@@ -34,7 +35,7 @@ func decodeOneHot32(val uint32) (ret []uint) {
 	return
 }
 
-func (s *Processor) Start() {
+func (s *processor) Start() {
 	if s.Memory != nil {
 		close(s.start)
 	} else {
@@ -42,6 +43,6 @@ func (s *Processor) Start() {
 	}
 }
 
-func (s *Processor) Stop() {
+func (s *processor) Stop() {
 	close(s.quit)
 }
