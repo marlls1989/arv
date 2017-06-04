@@ -66,6 +66,7 @@ func (m *memoryArray) ReadPort(addr, lng <-chan uint32, data chan<- []byte) {
 	}()
 }
 
+// Constructs a read-then-write memory port
 func (m *memoryArray) ReadWritePort(
 	addr, lng <-chan uint32,
 	dataIn <-chan []byte,
@@ -76,21 +77,37 @@ func (m *memoryArray) ReadWritePort(
 		defer m.mem.Sync(gommap.MS_SYNC)
 		defer close(dataOut)
 		for a := range addr {
-			d, dd := <-dataIn
+			di, dv := <-dataIn
+			l, lv := <-lng
 
-			if !dd {
+			if !(dv || lv) {
 				return
 			}
 
-			if len(d) > 0 {
+			// Memory Read portion
+			var do []byte
+			if a+l < uint32(len(m.mem)) {
+				m.mux.Lock()
+				do = m.mem[a : a+l]
+				m.mux.Unlock()
+			} else {
+				if m.Debug {
+					log.Printf("Reading %d bytes from out of bounds memory location %x", l, a)
+				}
+				do = make([]byte, l)
+			}
+			dataOut <- do
+
+			// Memory Write portion
+			if len(di) > 0 {
 				e := <-we
 				if e {
 					if m.Debug {
-						log.Printf("Writing %v to memory address %X", d, a)
+						log.Printf("Writing %v to memory address %X", di, a)
 					}
 					if a < 0x80000000 {
 						m.mux.Lock()
-						for i, b := range d {
+						for i, b := range di {
 							m.mem[a+uint32(i)] = b
 						}
 						m.mux.Unlock()
@@ -100,28 +117,10 @@ func (m *memoryArray) ReadWritePort(
 						}
 						close(m.EndSimulation)
 					} else {
-						for _, c := range d {
+						for _, c := range di {
 							fmt.Printf("%c", c)
 						}
 					}
-				}
-			} else {
-				var d []byte
-				l, lv := <-lng
-				if lv {
-					if a+l < uint32(len(m.mem)) {
-						m.mux.Lock()
-						d = m.mem[a : a+l]
-						m.mux.Unlock()
-					} else {
-						if m.Debug {
-							log.Printf("Reading %d bytes from out of bounds memory location %x", l, a)
-						}
-						d = make([]byte, l)
-					}
-					dataOut <- d
-				} else {
-					return
 				}
 			}
 		}

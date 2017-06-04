@@ -54,14 +54,17 @@ func (s *processor) memoryUnit(
 				data := make([]byte, 1)
 				data[0] = byte(in.c & 0xFF)
 				wdata <- data
+				rlen <- 1
 			case memorySH:
 				data := make([]byte, 2)
 				binary.LittleEndian.PutUint16(data, uint16(in.c&0xFFFF))
 				wdata <- data
+				rlen <- 2
 			case memorySW:
 				data := make([]byte, 4)
 				binary.LittleEndian.PutUint32(data, in.c)
 				wdata <- data
+				rlen <- 4
 			}
 		}
 	}()
@@ -73,24 +76,24 @@ func (s *processor) memoryUnit(
 
 		for op := range operation {
 			out.writeRequest = false
-			out.value = 0
+			val, vval := <-rdata
+
+			if !vval {
+				return
+			}
+
 			switch op {
 			case memorySB, memorySH, memorySW:
 				out.writeRequest = true
 			case memoryLB:
-				val := <-rdata
 				out.value = uint32(int8(val[0]))
 			case memoryLBU:
-				val := <-rdata
 				out.value = uint32(val[0])
 			case memoryLH:
-				val := <-rdata
 				out.value = uint32(int16(binary.LittleEndian.Uint16(val)))
 			case memoryLHU:
-				val := <-rdata
 				out.value = uint32(binary.LittleEndian.Uint16(val))
 			case memoryLW:
-				val := <-rdata
 				out.value = binary.LittleEndian.Uint32(val)
 			}
 
