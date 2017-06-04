@@ -19,55 +19,46 @@ func (s *processor) memoryUnit(
 	we <-chan bool,
 	output chan<- memoryUnitOutput) {
 
-	raddr := make(chan uint32)
+	addr := make(chan uint32)
 	rdata := make(chan []byte)
+	wdata := make(chan []byte)
 	rlen := make(chan uint32)
 
-	s.Memory.ReadPort(raddr, rlen, rdata)
-
-	waddr := make(chan uint32)
-	wdata := make(chan []byte)
-
-	s.Memory.WritePort(waddr, wdata, we)
+	s.Memory.ReadWritePort(addr, rlen, wdata, we, rdata)
 
 	operation := make(chan xuOperation)
 
 	go func() {
-		defer close(raddr)
+		defer close(addr)
 		defer close(rlen)
-		defer close(waddr)
 		defer close(wdata)
 		defer close(operation)
 
-		var addr uint32
+		emptyData := make([]byte, 0)
 
 		for in := range input {
-			addr = in.a + in.b
-
+			addr <- in.a + in.b
 			operation <- in.op
 
 			switch in.op {
 			case memoryLB, memoryLBU:
-				raddr <- addr
+				wdata <- emptyData
 				rlen <- 1
 			case memoryLH, memoryLHU:
-				raddr <- addr
+				wdata <- emptyData
 				rlen <- 2
 			case memoryLW:
-				raddr <- addr
+				wdata <- emptyData
 				rlen <- 4
 			case memorySB:
-				waddr <- addr
 				data := make([]byte, 1)
 				data[0] = byte(in.c & 0xFF)
 				wdata <- data
 			case memorySH:
-				waddr <- addr
 				data := make([]byte, 2)
 				binary.LittleEndian.PutUint16(data, uint16(in.c&0xFFFF))
 				wdata <- data
 			case memorySW:
-				waddr <- addr
 				data := make([]byte, 4)
 				binary.LittleEndian.PutUint32(data, in.c)
 				wdata <- data
@@ -88,15 +79,13 @@ func (s *processor) memoryUnit(
 				out.writeRequest = true
 			case memoryLB:
 				val := <-rdata
-				v := int32(val[0])
-				out.value = uint32(v)
+				out.value = uint32(int8(val[0]))
 			case memoryLBU:
 				val := <-rdata
 				out.value = uint32(val[0])
 			case memoryLH:
 				val := <-rdata
-				v := int32(binary.LittleEndian.Uint16(val))
-				out.value = uint32(v)
+				out.value = uint32(int16(binary.LittleEndian.Uint16(val)))
 			case memoryLHU:
 				val := <-rdata
 				out.value = uint32(binary.LittleEndian.Uint16(val))

@@ -9,8 +9,12 @@ import (
 )
 
 type Memory interface {
+	ReadWritePort(
+		addr, lng <-chan uint32,
+		dataIn <-chan []byte,
+		we <-chan bool,
+		dataOut chan<- []byte)
 	ReadPort(addr, len <-chan uint32, data chan<- []byte)
-	WritePort(addr <-chan uint32, data <-chan []byte, we <-chan bool)
 }
 
 type memoryArray struct {
@@ -60,19 +64,26 @@ func (m *memoryArray) ReadPort(addr, lng <-chan uint32, data chan<- []byte) {
 			}
 		}
 	}()
-
 }
 
-func (m *memoryArray) WritePort(
-	addr <-chan uint32,
-	data <-chan []byte,
-	we <-chan bool) {
+func (m *memoryArray) ReadWritePort(
+	addr, lng <-chan uint32,
+	dataIn <-chan []byte,
+	we <-chan bool,
+
+	dataOut chan<- []byte) {
 	go func() {
 		defer m.mem.Sync(gommap.MS_SYNC)
-		for e := range we {
-			a, da := <-addr
-			d, dv := <-data
-			if dv && da {
+		defer close(dataOut)
+		for a := range addr {
+			d, dd := <-dataIn
+
+			if !dd {
+				return
+			}
+
+			if len(d) > 0 {
+				e := <-we
 				if e {
 					if m.Debug {
 						log.Printf("Writing %v to memory address %X", d, a)
@@ -95,7 +106,23 @@ func (m *memoryArray) WritePort(
 					}
 				}
 			} else {
-				return
+				var d []byte
+				l, lv := <-lng
+				if lv {
+					if a+l < uint32(len(m.mem)) {
+						m.mux.Lock()
+						d = m.mem[a : a+l]
+						m.mux.Unlock()
+					} else {
+						if m.Debug {
+							log.Printf("Reading %d bytes from out of bounds memory location %x", l, a)
+						}
+						d = make([]byte, l)
+					}
+					dataOut <- d
+				} else {
+					return
+				}
 			}
 		}
 	}()
