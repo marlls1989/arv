@@ -22,6 +22,11 @@ func (s *processor) nextPcUnit(
 		fetchAddr <- s.startPC
 		nextValid <- 0
 		for pc := range currPC {
+			select {
+			case _ = <-s.quit:
+				return
+			default:
+			}
 			var target uint32
 			valid := <-currValid
 			select {

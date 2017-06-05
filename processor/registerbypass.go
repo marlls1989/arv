@@ -1,5 +1,9 @@
 package processor
 
+import (
+	"log"
+)
+
 type regReadCmd struct {
 	aaddr, baddr regAddr
 }
@@ -48,6 +52,9 @@ func (s *processor) registerBypass(
 			we := wcmd.we && (waddr != 0)
 
 			if we {
+				if s.Debug {
+					log.Printf("Writing %X to register %v", wdata, waddr)
+				}
 				regWdata <- wdata
 				regWaddr <- waddr
 			}

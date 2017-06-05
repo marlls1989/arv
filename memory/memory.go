@@ -90,6 +90,9 @@ func (m *memoryArray) ReadWritePort(
 				m.mux.Lock()
 				do = m.mem[a : a+l]
 				m.mux.Unlock()
+				if m.Debug {
+					log.Printf("Reading %d from memory address %X", do, a)
+				}
 			} else {
 				if m.Debug {
 					log.Printf("Reading %d bytes from out of bounds memory location %x", l, a)

@@ -2,6 +2,7 @@ package processor
 
 import (
 	"log"
+	"sync/atomic"
 )
 
 func (s *processor) operandFetchUnit(
@@ -25,6 +26,12 @@ func (s *processor) operandFetchUnit(
 			valid := decoded.valid
 			pc := decoded.pc
 
+			select {
+			case _ = <-s.quit:
+				return
+			default:
+			}
+
 			if s.Debug {
 				log.Printf("Decoded %+v pc:%X valid: %v", decoded, pc, valid)
 			}
@@ -47,6 +54,7 @@ func (s *processor) operandFetchUnit(
 						if s.Debug {
 							log.Printf("Issuing bubble due to register lock %v", regAddr(lock))
 						}
+						atomic.AddUint64((&s.Bubbles), 1)
 						regRcmdOut <- regReadCmd{
 							aaddr: 0,
 							baddr: 0}
@@ -75,6 +83,7 @@ func (s *processor) operandFetchUnit(
 						if s.Debug {
 							log.Printf("Issuing bubble due to register lock %v", regAddr(lock))
 						}
+						atomic.AddUint64((&s.Bubbles), 1)
 						regRcmdOut <- regReadCmd{
 							aaddr: 0,
 							baddr: 0}
@@ -121,6 +130,7 @@ func (s *processor) operandFetchUnit(
 						if s.Debug {
 							log.Printf("Issuing bubble due to register lock %v", regAddr(lock))
 						}
+						atomic.AddUint64((&s.Bubbles), 1)
 						regRcmdOut <- regReadCmd{
 							aaddr: 0,
 							baddr: 0}
@@ -147,6 +157,7 @@ func (s *processor) operandFetchUnit(
 			case opFormatB:
 				for lock := range regLock {
 					if (uint32(regAaddr)&^lock == 0) || (uint32(regBaddr)&^lock == 0) {
+						atomic.AddUint64((&s.Bubbles), 1)
 						if s.Debug {
 							log.Printf("Issuing bubble due to register lock %v", regAddr(lock))
 						}

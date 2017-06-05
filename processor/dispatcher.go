@@ -42,6 +42,13 @@ func (s *processor) dispatcherUnit(
 		bypassOut <- 0
 
 		for in := range dispatcherIn {
+
+			select {
+			case _ = <-s.quit:
+				return
+			default:
+			}
+
 			xuSel := xuSelector(in.xuOper >> 4)
 			if s.Debug {
 				log.Printf("Dispatching instruction %v", in)

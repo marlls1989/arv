@@ -8,6 +8,7 @@ import (
 	"log"
 	"os"
 	"runtime"
+	"sync/atomic"
 )
 
 func main() {
@@ -32,6 +33,7 @@ func main() {
 		log.Fatal(err)
 	}
 	log.Print("Memdump file opened")
+	defer file.Close()
 
 	if *sizePtr >= 0 {
 		file.Truncate((*sizePtr) * 1024)
@@ -59,5 +61,8 @@ func main() {
 	<-mem.EndSimulation
 	proc.Stop()
 	log.Print("Finishing Simulation")
-	file.Close()
+	log.Printf("Decoded: %v instructions", atomic.LoadUint64(&proc.Decoded))
+	log.Printf("Inserted: %v bubbles", atomic.LoadUint64(&proc.Bubbles))
+	log.Printf("Retired: %v instructions", atomic.LoadUint64(&proc.Retired))
+	log.Printf("Cancelled: %v instructions", atomic.LoadUint64(&proc.Cancelled))
 }

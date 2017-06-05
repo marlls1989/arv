@@ -11,6 +11,10 @@ type processor struct {
 	regFile     regFile
 	startPC     uint32
 	Debug       bool
+	Cancelled   uint64
+	Bubbles     uint64
+	Retired     uint64
+	Decoded     uint64
 }
 
 func encodeOneHot32(val ...uint) (ret uint32) {

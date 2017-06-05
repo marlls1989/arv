@@ -10,7 +10,7 @@ LDFLAGS = -nostdlib -Os -march=rv32i -Tqdi-riscv.ld
 OBJCOPY = $(TRIPLET)-objcopy
 OBJDUMP = $(TRIPLET)-objdump
 
-PROGNAME = helloworld dummy
+PROGNAME = helloworld dummy test_hanoi
 
 BIN_FILES = $(addsuffix .bin, $(PROGNAME))
 LST_FILES = $(addsuffix .lst, $(PROGNAME))
@@ -34,7 +34,6 @@ all : $(BIN_FILES) $(LST_FILES)
 
 %.o: %.cpp
 	$(CPP) $(CCFLAGS) -o $@ -c $<
-
 
 %.o: %.s
 	$(AS) $(ASFLAGS) -o $@ $<

@@ -4,6 +4,7 @@ import (
 	"encoding/binary"
 	"fmt"
 	"log"
+	"sync/atomic"
 )
 
 type opFormat uint8
@@ -127,6 +128,14 @@ func (s *processor) decoderUnit(
 		defer close(output)
 
 		for i := range instructionIn {
+
+			select {
+			case _ = <-s.quit:
+				return
+			default:
+			}
+
+			atomic.AddUint64((&s.Decoded), 1)
 			pc, pe := <-pcAddrIn
 			valid, ve := <-validIn
 
