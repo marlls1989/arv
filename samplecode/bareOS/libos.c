@@ -71,10 +71,11 @@ void *memset(void *dst, int ic, size_t bytes) {
   while(((size_t)Dst & 0x3) && (bytes--)) *(Dst++) = c;
   
   // Fills the aligned region using faster memory access instruction
-  for(f = (c << 24) | (c << 16) | (c << 8) | c,
-	Dst32 = (uint32_t*)Dst,
-	b = bytes & -4;
-      b ; b -=4) *(Dst32++) = f;
+	f = (c << 24) | (c << 16) | (c << 8) | c;
+	Dst32 = (uint32_t*)Dst;
+	
+  for(b = bytes & -4; b ; b -=4)
+		*(Dst32++) = f;
 
   // Fills the upper unligned bytes
   bytes &= 0x3;
@@ -94,18 +95,13 @@ void *memcpy(void *dst, const void *src, size_t bytes) {
   Dst = dst;
   Src = src;
 
-  if(((size_t)Dst & 0x3) == ((size_t)Src & 0x3)) {
-    // Fills the lower bytes till aligned
-    while(((size_t)Dst & 0x3) && (bytes--)) *(Dst++) = *(Src++);
-
-    // Fills the aligned region using faster memory access instruction
-    for(Dst32 = (uint32_t*)Dst, b = (bytes & -4), Src32 = (uint32_t*)Src ; b ; b -=4)
-      *(Dst32++) = *(Src32++);
-    
-    bytes &= 0x3;
-    Src = (uint8_t*)Src32;
-    Dst = (uint8_t*)Dst32;
-  }
+	// Fills the aligned region using faster memory access instruction
+	for(Dst32 = (uint32_t*)Dst, b = (bytes & -4), Src32 = (uint32_t*)Src ; b ; b -=4)
+		*(Dst32++) = *(Src32++);
+	
+	bytes &= 0x3;
+	Src = (uint8_t*)Src32;
+	Dst = (uint8_t*)Dst32;
 
   // Fills the upper unligned bytes
   while(bytes--) *(Dst++) = *(Src++);

@@ -1,12 +1,12 @@
 TRIPLET = riscv32-unknown-elf
 CC = $(TRIPLET)-gcc
-CFLAGS = -IbareOS/include -Os -fno-builtin -march=rv32i -nostdinc
+CFLAGS = -IbareOS/include -O2 -fno-builtin -march=rv32i -nostdinc -mbranch-cost=7
 AS = $(TRIPLET)-as
 ASFLAGS = -march=rv32i
 CPP = $(TRIPLET)-g++
 CCFLAGS = $(CFLAGS)
 LD = $(TRIPLET)-gcc
-LDFLAGS = -nostdlib -Os -march=rv32i -Tqdi-riscv.ld
+LDFLAGS = -nostdlib -march=rv32i -Tqdi-riscv.ld
 OBJCOPY = $(TRIPLET)-objcopy
 OBJDUMP = $(TRIPLET)-objdump
 
