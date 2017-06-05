@@ -26,6 +26,16 @@ func (s *processor) retireUnit(
 	currValid := make(chan uint8)
 	nextValid := make(chan uint8)
 
+	nextBr := make(chan uint32)
+
+	go func() {
+		defer close(branchOut)
+
+		for i := range nextBr {
+			branchOut <- i
+		}
+	}()
+
 	// utilizes a loop to keep track of the current flow validity flag
 	go func() {
 		defer close(currValid)
@@ -38,7 +48,7 @@ func (s *processor) retireUnit(
 	go func() {
 		defer close(regWcmd)
 		defer close(memoryWe)
-		defer close(branchOut)
+		defer close(nextBr)
 		defer close(nextValid)
 
 		<-s.start
@@ -119,7 +129,7 @@ func (s *processor) retireUnit(
 				we:   rwe,
 				data: data}
 			if brTaken {
-				branchOut <- brTarget
+				nextBr <- brTarget
 			}
 		}
 	}()
