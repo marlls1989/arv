@@ -2,5 +2,7 @@
 
 void kmain() {
 	printf("Hello World!\n");
-	halt();
+
+	//terminates execution
+	for(;;) halt();
 }
