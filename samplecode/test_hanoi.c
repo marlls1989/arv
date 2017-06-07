@@ -1,6 +1,6 @@
 #include <libos.h>
 
-#define NUM_RINGS 4
+#define NUM_RINGS 7
 #define legal(f, t) ((table[t][top[t]] > table[f][top[f]]) && ((table[t][top[t]] & 1) ^ (table[f][top[f]] & 1)))
 
 static unsigned int table[3][NUM_RINGS+1], top[3];
