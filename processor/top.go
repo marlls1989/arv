@@ -26,19 +26,17 @@ func ConstructProcessor(mem memory.Memory) *processor {
 	proc.decoderUnit(fetchValid, fetchPcAddr, instruction, decoderOutput)
 
 	regLock := make(chan uint32)
-	regRData := make(chan regDataRet)
 	dispatcherCmd := make(chan dispatcherInput)
-	regRcmd := make(chan regReadCmd)
 	regDaddrIn := make(chan regAddr)
 
-	proc.operandFetchUnit(decoderOutput, regRData, regLock, dispatcherCmd, regRcmd, regDaddrIn)
+	proc.operandFetchUnit(decoderOutput, regLock, dispatcherCmd, regDaddrIn)
 
 	regDaddrOut := make(chan regAddr)
 	proc.registerLock(regDaddrIn, regDaddrOut, regLock, 4)
 
-	regWcmd := make(chan retireRegwCmd)
+	regWcmd := make(chan regWCmd)
 
-	proc.registerBypass(regWcmd, regDaddrOut, regRcmd, regRData)
+	proc.regFile.WritePort(regDaddrOut, regWcmd)
 
 	ctrlQIn := make(chan programElement)
 	bypassIn := make(chan uint32)

@@ -32,16 +32,20 @@ func (r *regFile) ReadPort(
 	}()
 }
 
-func (r *regFile) WritePort(addr <-chan regAddr, data <-chan uint32) {
+func (r *regFile) WritePort(addr <-chan regAddr, regWCmd <-chan regWCmd) {
 
 	go func() {
-		for d := range data {
+		for wcmd := range regWCmd {
 			a, av := <-addr
 			if !av {
 				return
 			}
+
+			d := wcmd.data
+			we := wcmd.we
+
 			ad := decodeOneHot32(uint32(a))
-			if len(ad) != 0 && ad[0] != 0 {
+			if we && len(ad) != 0 && ad[0] != 0 {
 				r.mux.Lock()
 				r.reg[ad[0]-1] = d
 				r.mux.Unlock()

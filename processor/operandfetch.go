@@ -7,20 +7,29 @@ import (
 
 func (s *processor) operandFetchUnit(
 	decodedIn <-chan decoderOut,
-	regDataIn <-chan regDataRet,
 	regLock <-chan uint32,
 
 	dispatcherOut chan<- dispatcherInput,
-	regRcmdOut chan<- regReadCmd,
 	regDaddrOut chan<- regAddr) {
+
+	chAaddr := make(chan regAddr)
+	chAdata := make(chan uint32)
+
+	s.regFile.ReadPort(chAaddr, chAdata)
+
+	chBaddr := make(chan regAddr)
+	chBdata := make(chan uint32)
+
+	s.regFile.ReadPort(chBaddr, chBdata)
 
 	go func() {
 
 		var a, b, c uint32
 
-		defer close(regRcmdOut)
 		defer close(regDaddrOut)
 		defer close(dispatcherOut)
+		defer close(chAaddr)
+		defer close(chBaddr)
 
 		for decoded := range decodedIn {
 			valid := decoded.valid
@@ -48,35 +57,6 @@ func (s *processor) operandFetchUnit(
 			c = 0
 
 			switch fmt {
-			case opFormatR:
-				for lock := range regLock {
-					if (uint32(regAaddr)&^lock == 0) || (uint32(regBaddr)&^lock == 0) {
-						if s.Debug {
-							log.Printf("Issuing bubble due to register lock %v", regAddr(lock))
-						}
-						atomic.AddUint64((&s.Bubbles), 1)
-						regRcmdOut <- regReadCmd{
-							aaddr: 0,
-							baddr: 0}
-						dispatcherOut <- dispatcherInput{
-							valid:  valid,
-							pcAddr: 0,
-							xuOper: bypassB,
-							a:      0,
-							b:      0,
-							c:      0}
-						regDaddrOut <- 0
-					} else {
-						break
-					}
-				}
-				regRcmdOut <- regReadCmd{
-					aaddr: regAaddr,
-					baddr: regBaddr}
-				read := <-regDataIn
-				a = read.adata
-				b = read.bdata
-
 			case opFormatI:
 				for lock := range regLock {
 					if uint32(regAaddr)&^lock == 0 {
@@ -84,40 +64,30 @@ func (s *processor) operandFetchUnit(
 							log.Printf("Issuing bubble due to register lock %v", regAddr(lock))
 						}
 						atomic.AddUint64((&s.Bubbles), 1)
-						regRcmdOut <- regReadCmd{
-							aaddr: 0,
-							baddr: 0}
 						dispatcherOut <- dispatcherInput{
 							valid:  valid,
-							pcAddr: 0,
+							pcAddr: pc,
 							xuOper: bypassB,
 							a:      0,
 							b:      0,
 							c:      0}
-						regDaddrOut <- 0
+						regDaddrOut <- 1
 					} else {
 						break
 					}
 				}
-				regRcmdOut <- regReadCmd{
-					aaddr: regAaddr}
-				read := <-regDataIn
-				a = read.adata
+
+				chAaddr <- regAaddr
+				a = <-chAdata
 				b = (uint32)((int32)(ins) >> 20)
 
 			case opFormatU:
 				<-regLock
-				regRcmdOut <- regReadCmd{
-					aaddr: 0,
-					baddr: 0}
 				a = pc
 				b = ins & 0xFFFFF000
 
 			case opFormatJ:
 				<-regLock
-				regRcmdOut <- regReadCmd{
-					aaddr: 0,
-					baddr: 0}
 				a = pc
 				b = (((uint32)((int32)(ins)>>12) & 0xFFF00000) |
 					(ins & 0x000FF000) |
@@ -131,57 +101,48 @@ func (s *processor) operandFetchUnit(
 							log.Printf("Issuing bubble due to register lock %v", regAddr(lock))
 						}
 						atomic.AddUint64((&s.Bubbles), 1)
-						regRcmdOut <- regReadCmd{
-							aaddr: 0,
-							baddr: 0}
 						dispatcherOut <- dispatcherInput{
 							valid:  valid,
-							pcAddr: 0,
+							pcAddr: pc,
 							xuOper: bypassB,
 							a:      0,
 							b:      0,
 							c:      0}
-						regDaddrOut <- 0
+						regDaddrOut <- 1
 					} else {
 						break
 					}
 				}
-				regRcmdOut <- regReadCmd{
-					aaddr: regAaddr,
-					baddr: regBaddr}
-				read := <-regDataIn
-				a = read.adata
-				b = (((uint32)((int32)(ins)>>20) & 0xFFFFFFE0) | ((ins >> 7) & 0x1F))
-				c = read.bdata
 
-			case opFormatB:
+				chAaddr <- regAaddr
+				chBaddr <- regBaddr
+				a = <-chAdata
+				b = (((uint32)((int32)(ins)>>20) & 0xFFFFFFE0) | ((ins >> 7) & 0x1F))
+				c = <-chBdata
+
+			case opFormatB, opFormatR:
 				for lock := range regLock {
 					if (uint32(regAaddr)&^lock == 0) || (uint32(regBaddr)&^lock == 0) {
 						atomic.AddUint64((&s.Bubbles), 1)
 						if s.Debug {
 							log.Printf("Issuing bubble due to register lock %v", regAddr(lock))
 						}
-						regRcmdOut <- regReadCmd{
-							aaddr: 0,
-							baddr: 0}
 						dispatcherOut <- dispatcherInput{
 							valid:  valid,
-							pcAddr: 0,
+							pcAddr: pc,
 							xuOper: bypassB,
 							a:      0,
 							b:      0,
 							c:      0}
-						regDaddrOut <- 0
+						regDaddrOut <- 1
 					} else {
 						break
 					}
 				}
-				regRcmdOut <- regReadCmd{
-					aaddr: regAaddr,
-					baddr: regBaddr}
-				read := <-regDataIn
-				a = read.adata
-				b = read.bdata
+				chAaddr <- regAaddr
+				chBaddr <- regBaddr
+				a = <-chAdata
+				b = <-chBdata
 				c = (((uint32)((int32)(ins)>>20) & 0xFFFFF000) |
 					((ins << 4) & 0x800) |
 					((ins >> 20) & 0x7E0) |
@@ -189,9 +150,6 @@ func (s *processor) operandFetchUnit(
 
 			case opFormatNop:
 				<-regLock
-				regRcmdOut <- regReadCmd{
-					aaddr: 0,
-					baddr: 0}
 			}
 
 			dispatcherOut <- dispatcherInput{
@@ -203,7 +161,7 @@ func (s *processor) operandFetchUnit(
 				c:      c}
 
 			if fmt == opFormatB || fmt == opFormatS || fmt == opFormatNop {
-				regDaddrOut <- 0
+				regDaddrOut <- 1
 			} else {
 				regDaddrOut <- regDaddr
 			}

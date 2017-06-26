@@ -5,7 +5,7 @@ import (
 	"sync/atomic"
 )
 
-type retireRegwCmd struct {
+type regWCmd struct {
 	we   bool
 	data uint32
 }
@@ -19,7 +19,7 @@ func (s *processor) retireUnit(
 	memoryIn <-chan memoryUnitOutput,
 	branchIn <-chan branchOutput,
 
-	regWcmd chan<- retireRegwCmd,
+	regWcmd chan<- regWCmd,
 	memoryWe chan<- bool,
 	branchOut chan<- uint32) {
 
@@ -53,7 +53,7 @@ func (s *processor) retireUnit(
 
 		<-s.start
 		nextValid <- 0
-		regWcmd <- retireRegwCmd{we: false}
+		regWcmd <- regWCmd{we: false}
 
 		for q := range qIn {
 			select {
@@ -125,7 +125,7 @@ func (s *processor) retireUnit(
 				nextValid <- valid
 			}
 
-			regWcmd <- retireRegwCmd{
+			regWcmd <- regWCmd{
 				we:   rwe,
 				data: data}
 			if brTaken {
