@@ -2,7 +2,7 @@ package memory
 
 import (
 	"fmt"
-	"launchpad.net/gommap"
+	"github.com/edsrzf/mmap-go"
 	"log"
 	"os"
 	"sync"
@@ -18,7 +18,7 @@ type Memory interface {
 }
 
 type memoryArray struct {
-	mem           gommap.MMap
+	mem           mmap.MMap
 	mux           sync.Mutex
 	EndSimulation chan struct{}
 	Debug         bool
@@ -28,15 +28,10 @@ func MemoryArrayFromFile(file *os.File) (*memoryArray, error) {
 	ret := new(memoryArray)
 
 	memory, err :=
-		gommap.Map(file.Fd(), gommap.PROT_READ|gommap.PROT_WRITE, gommap.MAP_SHARED)
+		mmap.Map(file, mmap.RDWR, 0)
 
 	ret.mem = memory
 	ret.EndSimulation = make(chan struct{})
-
-	if err != nil {
-		//Force initialization
-		memory.Sync(gommap.MS_SYNC)
-	}
 
 	return ret, err
 }
@@ -74,7 +69,7 @@ func (m *memoryArray) ReadWritePort(
 
 	dataOut chan<- []byte) {
 	go func() {
-		defer m.mem.Sync(gommap.MS_SYNC)
+		defer m.mem.Flush()
 		defer close(dataOut)
 		for a := range addr {
 			di, dv := <-dataIn
