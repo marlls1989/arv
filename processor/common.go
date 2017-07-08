@@ -1,3 +1,4 @@
+// This package contains the high-level functional model of the ARV core.
 package processor
 
 import (
@@ -5,11 +6,23 @@ import (
 	"log"
 )
 
+// Processor model instace created using ConstructProcessor function.
+//
+// It is used by logical stage constructors to refer to the appropriated register bank and memory model.
+// It is also used to keep execution performance statistics.
+//
+// Debug flag enabled pipeline debugging verbosity;
+// and StartPC points to the first instruction to be executed,
+// should be set before calling the Start function.
+//
+// Cancelled, Bubbles, Retired and Decoded are respectively counters of instructions and bubbles
+// cancelled due to branching; bubbles inserted due to pipeline hazards; instructions and bubbles
+// successfully retired and instructions fetched and decoded.
 type processor struct {
 	start, quit chan struct{}
 	Memory      memory.Memory
 	regFile     regFile
-	startPC     uint32
+	StartPC     uint32
 	Debug       bool
 	Cancelled   uint64
 	Bubbles     uint64
@@ -17,6 +30,8 @@ type processor struct {
 	Decoded     uint64
 }
 
+// Receives one or more values between 0 and 31 and encodes into a 32-bit
+// bitfield by setting the respective numbered bits to 1
 func encodeOneHot32(val ...uint) (ret uint32) {
 	ret = 0
 	for _, v := range val {
@@ -26,6 +41,8 @@ func encodeOneHot32(val ...uint) (ret uint32) {
 	return
 }
 
+// Receives a 32-bit bitfield decomposing into a ordered vector of uint
+// containing the number of bits set as 1.
 func decodeOneHot32(val uint32) (ret []uint) {
 	var i uint
 	for i = 0; i < 32; i++ {
@@ -39,6 +56,7 @@ func decodeOneHot32(val uint32) (ret []uint) {
 	return
 }
 
+// Starts the processor model execution.
 func (s *processor) Start() {
 	if s.Memory != nil {
 		close(s.start)
@@ -47,6 +65,8 @@ func (s *processor) Start() {
 	}
 }
 
+// Terminates the processor model execution.
+// BUG(msartori): Untested
 func (s *processor) Stop() {
 	close(s.quit)
 }

@@ -18,8 +18,8 @@ func (s *processor) nextPcUnit(
 		defer close(nextValid)
 
 		<-s.start
-		nextPc <- s.startPC
-		fetchAddr <- s.startPC
+		nextPc <- s.StartPC
+		fetchAddr <- s.StartPC
 		nextValid <- 0
 		for pc := range currPC {
 			select {

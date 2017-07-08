@@ -4,9 +4,9 @@ import (
 	"bitbucket.org/marcos_sartori/qdi-riscv/memory"
 )
 
-/* This function instanciate a new processor unit
- * calling each module constructor and constructing the interconect */
-
+// This function instanciate a new processor unit
+// calling each logical stage constructor and creating the interconect channels.
+// The function receives the memory model as argument and returns a processor struct.
 func ConstructProcessor(mem memory.Memory) *processor {
 	proc := new(processor)
 
