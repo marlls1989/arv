@@ -10,10 +10,10 @@ import (
 
 // Memory model instance created using MemoryArrayFromFile function.
 //
-// The file mapped to the lower portion of the memory model starting at 0. 
+// The file is mapped to the lower portion of the memory model starting at 0.
 // EndSimulation is a channel closed when data is written to address range 0x80000000-0x80001000,
 // it can be used to sign end of simulation.
-// Any byte written to memory location above 0x80001000 is printed to stdout
+// Any byte written to memory location above 0x80001000 are printed to stdout
 // Reads and writes to memory locations not backed by file bellow the special upper regions are ignored.
 //
 // Invalid memory access warnings are printed to stderr if the Debug flag is enabled.
@@ -24,8 +24,15 @@ type memoryArray struct {
 	Debug         bool
 }
 
-// Construct a memoryArray by mmapping the contents of the file received as argument,
-// err propagates any error from the mmap call and should be check before proceeding.
+// Construct a memoryArray memory model by mmapping the contents of file received as argument.
+//
+// The memoryArray instance returned implements the Memory interface presenting the following memory map:
+// the file is mapped to the lower portion of the memory model starting at 0;
+// memoryArray.EndSimulation is a struct {} channel closed when data is written to address range 0x80000000-0x80001000,
+// it can be used to sign end of simulation;
+// any byte written to memory location above 0x80001000 are printed to stdout;
+// reads and writes to memory locations not backed by file bellow the special upper regions are ignored.
+
 func MemoryArrayFromFile(file *os.File) (*memoryArray, error) {
 	ret := new(memoryArray)
 
@@ -66,7 +73,6 @@ func (m *memoryArray) ReadPort(addr, lng <-chan uint32, data chan<- []byte) {
 		}
 	}()
 }
-
 
 // Constructs a read-then-write memory port logic stage as described in the Memory interface.
 //

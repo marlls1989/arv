@@ -5,6 +5,19 @@ import (
 	"sync/atomic"
 )
 
+// Constructs the operandFetchUnit logic stage
+//
+// The control signals are received from the decoder unit,
+// the instruction format is used to determinate the required operands,
+// the regLock channel is read and if the instruction format requires register operands,
+// the register address is compared with the registerLock mask and bubbles are issue untill the register is unlocked,
+// after every required register are unlocked, the immediate values are sign extended
+// and the instruction is issued.
+//
+// Instructions and bubbles are issued by writing to the dispatcherOut, regRcmdOut and regDaddrOut channels.
+// The dispatcherOut channel sends the operation control signal, the operands and the stream tag to the dispatcher.
+// regRcmdOut is used by the registerBypassUnit to compare the simultaneous register reads and writes and retrieve register values.
+// regDaddrOut is the destination register feed into the register lock queue and later used to write back results.
 func (s *processor) operandFetchUnit(
 	decodedIn <-chan decoderOut,
 	regDataIn <-chan regDataRet,

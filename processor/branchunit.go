@@ -5,11 +5,21 @@ type branchInput struct {
 	op          xuOperation
 }
 
+// Used by the branch unit to signal the retire unit intention to branch
+//
+// Link signals that the contents of linkAddr should be written to the destination register;
+// taken signals if the branch instruction overwrites the program counter with the content of target.
 type branchOutput struct {
 	link, taken      bool
 	linkAddr, target uint32
 }
 
+// This function constructs the branch unit two logical stages.
+//
+// In the real implementation adder logic may be distributed across the two stages,
+// in this model the second stage is a just a dummy delay stage.
+//
+//
 func (s *processor) branchUnit(
 	input <-chan branchInput,
 	output chan<- branchOutput) {

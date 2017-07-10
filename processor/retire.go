@@ -5,11 +5,25 @@ import (
 	"sync/atomic"
 )
 
+// Used by the retire unit to request a register write
 type retireRegwCmd struct {
 	we   bool
 	data uint32
 }
 
+// Constructs the retire unit and the valid tag loop logic stages
+//
+// The Retire Unit first reads the execution unit selector and stream tag from program queue,
+// then it reads from the selected execution unit acting accordingly.
+//
+// The stream tag read from the program queue is compared to the valid tag kept in the valid tag loop.
+// If the stream tag and the valid tag differs, the instruction is cancelled.
+//
+// If the selected execution unit signals an exception or a branch and the instruction is not cancelled,
+// the valid stream tag is updated and the fetchUnit is signalled to modify the program counter accordingly.
+//
+// If a intention to write is received when reading from the memory access unit,
+// the retire unit authorises or cancels the pending memory write by driving the memWe channel.
 func (s *processor) retireUnit(
 	qIn <-chan programElement,
 	bypassIn <-chan uint32,
@@ -82,6 +96,7 @@ func (s *processor) retireUnit(
 			case xuMemorySel:
 				meminfo := <-memoryIn
 				memWe = meminfo.writeRequest
+				rwe = meminfo.memoryRead
 				data = meminfo.value
 			case xuBranchSel:
 				br := <-branchIn

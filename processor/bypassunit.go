@@ -4,6 +4,8 @@ import (
 	"log"
 )
 
+// Constructs a dummy bypass element used by bubbles, LUI and NOP instructions.
+// Initiated to zeros as the execution loop started filled.
 func (s *processor) bypassEl(input <-chan uint32, output chan<- uint32) {
 	go func() {
 		defer close(output)
@@ -16,6 +18,7 @@ func (s *processor) bypassEl(input <-chan uint32, output chan<- uint32) {
 	}()
 }
 
+// Constructs a parameterisabled depth bypass execution unit.
 func (s *processor) bypassUnit(input <-chan uint32, output chan<- uint32, depth int) {
 	if depth < 2 {
 		log.Panic("bypassunit queue depth must be at least 2")
