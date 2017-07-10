@@ -9,9 +9,14 @@ import (
 )
 
 // Memory model instance created using MemoryArrayFromFile function.
-// References the file mapped to the lower portion of the memory model starting at 0.
+//
+// The file mapped to the lower portion of the memory model starting at 0. 
 // EndSimulation is a channel closed when data is written to address range 0x80000000-0x80001000,
-// which can be used to sign end of simulation.
+// it can be used to sign end of simulation.
+// Any byte written to memory location above 0x80001000 is printed to stdout
+// Reads and writes to memory locations not backed by file bellow the special upper regions are ignored.
+//
+// Invalid memory access warnings are printed to stderr if the Debug flag is enabled.
 type memoryArray struct {
 	mem           mmap.MMap
 	mux           sync.Mutex
@@ -19,6 +24,8 @@ type memoryArray struct {
 	Debug         bool
 }
 
+// Construct a memoryArray by mmapping the contents of the file received as argument,
+// err propagates any error from the mmap call and should be check before proceeding.
 func MemoryArrayFromFile(file *os.File) (*memoryArray, error) {
 	ret := new(memoryArray)
 
@@ -31,6 +38,10 @@ func MemoryArrayFromFile(file *os.File) (*memoryArray, error) {
 	return ret, err
 }
 
+// Constructs a read-only memory port logic stage as described in the Memory interface.
+//
+// Memory locations corresponding to the valid range in the file are read normally,
+// non mapped memory and special memory regions returns all zero data.
 func (m *memoryArray) ReadPort(addr, lng <-chan uint32, data chan<- []byte) {
 	go func() {
 		defer close(data)
@@ -56,16 +67,15 @@ func (m *memoryArray) ReadPort(addr, lng <-chan uint32, data chan<- []byte) {
 	}()
 }
 
-// Constructs a read-then-write memory port logic stage receiving and returning data using channels.
-// 
-// Input channels are read in the following order addr, dataIn, lng and conditionally we.
-// Input channel addr provides the 32-bit memory base address; lng the lenght in bytes
-// of the data to be read; dataIn the data to be optionally written; and we enables the memory write operation if dataIn lenght is greater than 0, otherwise the we channel is not read.
+
+// Constructs a read-then-write memory port logic stage as described in the Memory interface.
 //
-// The function writes on the output channel dataOut on every memory
+// Memory locations backed by file are read normally,
+// non mapped memory and special memory regions returns all zero data.
 //
-// Bytes written to the upper portion of the virtual memory model map above address 0x80001000
-// are written to the screen.
+// Memory regions backed by the file are written normally,
+// writes to special memory regions trigger actions as documented in memoryArray struct,
+// writes to memory locations bellow 0x80000000 not backed by file are discarded.
 func (m *memoryArray) ReadWritePort(
 	addr, lng <-chan uint32,
 	dataIn <-chan []byte,
