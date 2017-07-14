@@ -1,7 +1,5 @@
 # ARV Go High-level Functional Model #
 
-![ARV Organisation Diagram](https://bitbucket.org/marcos_sartori/qdi-riscv/src/doc/ARV_Organisation.svg)
-
 The Asynchronous RISC-V (ARV) is a 7-stage superscalar asynchronous processor design.
 It is designed using Communicating Sequential Processes (CSP), a paradigm suitable for modelling asynchronous circuits abstracting handshake protocol and encoding details.
 
@@ -58,7 +56,7 @@ Further options, including debug flags:
 
 ## Version History
 
-* v1.0 - First release described in my [End of Term Project](https://bitbucket.org/marcos_sartori/qdi-riscv/src/doc/TCC_Marcos_Sartori.pdf)
+* v1.0 - First release described in my End of Term Project.
 
 ## Authors and License
 
