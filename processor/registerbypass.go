@@ -4,6 +4,7 @@ import (
 	"log"
 )
 
+// Groups the register read addresses from the operand fetch unit to the
 type regReadCmd struct {
 	aaddr, baddr regAddr
 }
@@ -12,6 +13,18 @@ type regDataRet struct {
 	adata, bdata uint32
 }
 
+// Constructs the register access controller logic stage
+//
+// It receive the write and read registers from the operand fetch and retires units,
+// compares the write register to the requested read addresses,
+// if equal it sends the write data directly to operand register unit,
+// otherwise it reads from the register bank.
+//
+// The comparison operation forcefully synchronises the retire and operand fetch units.
+// This condition forces the operand fetch unit to send a valid address even if it has no intention to read a register.
+// In order to mitigate this issue, a special all-zero address code is used to signalise the registerBypass unit to not return data.
+//
+// The register read and write operation performed through this unit respect the RISC-V register zero convention.
 func (s *processor) registerBypass(
 	regWcmd <-chan retireRegwCmd,
 	regWaddrIn <-chan regAddr,
