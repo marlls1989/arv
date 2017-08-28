@@ -5,6 +5,11 @@ type shifterInput struct {
 	a, b uint32
 }
 
+// Constructs the shift execution unit logic stages
+// This unit is used by SLL(I), SRL(I), SRA(I) instructions.
+//
+// The unit is two-stage long to match the the expected depth of execution units.
+// Due to the simple logic, use of buffer may be carried to the silicon design.
 func (s *processor) shifterUnit(
 	input <-chan shifterInput,
 	output chan<- uint32) {

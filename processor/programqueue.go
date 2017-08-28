@@ -17,6 +17,9 @@ const (
 	xuBranchSel
 )
 
+// Holds the stream tag and execution unit selector
+// by the program queue to carry control information between
+// the dispatcher and retire unit
 type programElement struct {
 	valid uint8
 	unit  xuSelector
@@ -26,6 +29,9 @@ func (p programElement) String() string {
 	return fmt.Sprintf("{valid:%v unit:%v}", p.valid, p.unit)
 }
 
+// construct a program queue stage
+//
+// the stage is initiated to a bubble
 func (s *processor) prgQElement(
 	fifoIn <-chan programElement,
 	fifoOut chan<- programElement) {
@@ -39,11 +45,19 @@ func (s *processor) prgQElement(
 			unit:  xuBypassSel}
 
 		for in := range fifoIn {
+
+			select {
+			case <-s.quit:
+				return
+			default:
+			}
+
 			fifoOut <- in
 		}
 	}()
 }
 
+// Construct parameterisabled length program queue.
 func (s *processor) programQueue(
 	fifoIn <-chan programElement,
 	fifoOut chan<- programElement,

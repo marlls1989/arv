@@ -104,6 +104,14 @@ const (
 	t6
 )
 
+// This struct concatenates all signals sent from the decoder to the operandFetchUnit,
+// so they can be send using a single channel under a single handshake,
+// simulating the behavior found in hardware.
+//
+// ins is the raw instruction opcode
+// op is used by the dispatcher to select the correct execution unit and by the unit to select the operation
+// fmt is used by operandFetchUnit to retrieve the correct instruction operand sources
+// regA, rebB and regD are onehot representations of the register addresses used by the operandFetchunit
 type decoderOut struct {
 	pc               uint32
 	valid            uint8
@@ -117,6 +125,10 @@ func (d decoderOut) String() string {
 	return fmt.Sprintf("{ins:%08X regA:%v regB:%v regD:%v op:%v fmt:%v}", d.ins, d.regA, d.regB, d.regD, d.op, d.fmt)
 }
 
+// The decoder unit decodes the instruction opcode fetched from memory into control signals used by later stages.
+//
+// The pc and valid (streamtag) from the fetch unit are further delayed one handshake cycle and synchronized with
+// the control signals.
 func (s *processor) decoderUnit(
 	validIn <-chan uint8,
 	pcAddrIn <-chan uint32,

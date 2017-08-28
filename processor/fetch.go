@@ -4,6 +4,10 @@ import (
 	"log"
 )
 
+// nextPc and streamTag logic unit constructor
+//
+// receives the currPC and currValid values from the delay logic stage in the fetchUnit
+// and computes the nextPc, fetchaddr and nextValid (streamtag) values based on the presence of a branch address
 func (s *processor) nextPcUnit(
 	currPC <-chan uint32,
 	currValid <-chan uint8,
@@ -18,8 +22,8 @@ func (s *processor) nextPcUnit(
 		defer close(nextValid)
 
 		<-s.start
-		nextPc <- s.startPC
-		fetchAddr <- s.startPC
+		nextPc <- s.StartPC
+		fetchAddr <- s.StartPC
 		nextValid <- 0
 		for pc := range currPC {
 			select {
@@ -46,6 +50,15 @@ func (s *processor) nextPcUnit(
 	}()
 }
 
+// the fetchUnit constructor instantiates the nextPcUnit,
+// a delay logic element and a memory port.
+//
+// The delay logic element delays in one handshake cycle the value of nextPc and nextValid
+// sending them back to the nextPcUnit to form the pc/streamtag loop
+// and forwarding them to the decoder unit.
+//
+// In parallel with the delay element, the memory port fetches the instruction from the fetchAddr
+// outputting the fetched instruction directly to the decoderUnit.
 func (s *processor) fetchUnit(
 	branch <-chan uint32,
 

@@ -13,3 +13,4 @@ qdi-riscv
 *.lst
 *.sec
 *.bin
+*.orig

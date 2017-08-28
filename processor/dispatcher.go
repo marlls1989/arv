@@ -5,6 +5,12 @@ import (
 	"log"
 )
 
+// This structure is used to transfer instruction data from the operand fetch unit to the dispatcher
+//
+// valid is the stream tag
+// pcAddr requires no introductions
+// xuOper is the control signal selecting which operation to be performed
+// a, b and c are operands retrived by the operand fetch unit acording to the instruction format
 type dispatcherInput struct {
 	valid   uint8
 	pcAddr  uint32
@@ -16,6 +22,15 @@ func (d dispatcherInput) String() string {
 	return fmt.Sprintf("{valid:%v pcAddr:%X xuOper:%v a:%x b:%x c:%x}", d.valid, d.pcAddr, d.xuOper, d.a, d.b, d.c)
 }
 
+// This function constructs the dispatcher logic stage
+//
+// The instruction control signals is received through the the dispatcherIn,
+// the dispatcher then selects the correct execution unit using the upper bits of the xuOper,
+// sending the instruction to the correct execution unit.
+//
+// The selected execution unit is sent to the program ordering queue along with the stream tag.
+//
+// The stage is initiated to a bubble
 func (s *processor) dispatcherUnit(
 	dispatcherIn <-chan dispatcherInput,
 
@@ -32,6 +47,7 @@ func (s *processor) dispatcherUnit(
 		defer close(bypassOut)
 		defer close(adderOut)
 		defer close(logicOut)
+		defer close(shifterOut)
 		defer close(memoryOut)
 		defer close(branchOut)
 
@@ -44,7 +60,7 @@ func (s *processor) dispatcherUnit(
 		for in := range dispatcherIn {
 
 			select {
-			case _ = <-s.quit:
+			case <-s.quit:
 				return
 			default:
 			}
