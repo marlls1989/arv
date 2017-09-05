@@ -147,7 +147,7 @@ func (s *processor) decoderUnit(
 			default:
 			}
 
-			atomic.AddUint64((&s.Decoded), 1)
+			atomic.AddUint64((&s.Stats.Decoded), 1)
 			pc, pe := <-pcAddrIn
 			valid, ve := <-validIn
 

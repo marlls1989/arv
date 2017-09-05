@@ -95,7 +95,7 @@ func (s *processor) retireUnit(
 			 * and the validity flag of the current flow mismatch
 			 * invalidate the instruction */
 			if valid != q.valid {
-				atomic.AddUint64(&(s.Cancelled), 1)
+				atomic.AddUint64(&(s.Stats.Cancelled), 1)
 				if s.Debug {
 					log.Printf("Canceling Instruction [q: %+v br: %v brTarget:%x data: %x rwe: %v mwe: %v]", q, brTaken, brTarget, data, rwe, memWe)
 				}
@@ -108,7 +108,7 @@ func (s *processor) retireUnit(
 					memoryWe <- false
 				}
 			} else {
-				atomic.AddUint64(&(s.Retired), 1)
+				atomic.AddUint64(&(s.Stats.Retired), 1)
 				if s.Debug {
 					log.Printf("Retiring Instruction [q: %+v br: %v brTarget:%x data: %x rwe: %v mwe: %v]", q, brTaken, brTarget, data, rwe, memWe)
 				}

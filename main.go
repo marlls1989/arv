@@ -5,6 +5,7 @@ import (
 	"bitbucket.org/marcos_sartori/qdi-riscv/processor"
 	"flag"
 	"fmt"
+	"gopkg.in/yaml.v2"
 	"log"
 	"os"
 	"runtime"
@@ -17,6 +18,7 @@ func main() {
 	memfile := flag.String("memfile", "", "Memory dump `file name` containing the binary file name")
 	memdebug := flag.Bool("memdebug", false, "Logs memory writes to stderr")
 	coreedebug := flag.Bool("coredebug", false, "Logs instructions flow to stderr")
+	statsfile := flag.String("statsfile", "stats.yaml", "Record execution statistics to file")
 
 	flag.Parse()
 
@@ -61,8 +63,23 @@ func main() {
 	<-mem.EndSimulation
 	proc.Stop()
 	log.Print("Finishing Simulation")
-	log.Printf("Decoded: %v instructions", atomic.LoadUint64(&proc.Decoded))
-	log.Printf("Inserted: %v bubbles", atomic.LoadUint64(&proc.Bubbles))
-	log.Printf("Retired: %v instructions", atomic.LoadUint64(&proc.Retired))
-	log.Printf("Cancelled: %v instructions", atomic.LoadUint64(&proc.Cancelled))
+
+	file, err = os.OpenFile(*statsfile, os.O_WRONLY|os.O_CREATE, 0666)
+	if err != nil {
+		log.Printf("Could not open statsfile %s, %v", *statsfile, err)
+	} else {
+		defer file.Close()
+		stats, err := yaml.Marshal(&proc.Stats)
+		if err == nil {
+			file.Write(stats)
+			log.Printf("Execution statistics written to file %s", *statsfile)
+		}
+	}
+
+	if err != nil {
+		log.Printf("Decoded: %v instructions", atomic.LoadUint64(&proc.Stats.Decoded))
+		log.Printf("Inserted: %v bubbles", atomic.LoadUint64(&proc.Stats.Bubbles))
+		log.Printf("Retired: %v instructions", atomic.LoadUint64(&proc.Stats.Retired))
+		log.Printf("Cancelled: %v instructions", atomic.LoadUint64(&proc.Stats.Cancelled))
+	}
 }

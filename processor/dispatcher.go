@@ -3,6 +3,7 @@ package processor
 import (
 	"fmt"
 	"log"
+	"sync/atomic"
 )
 
 // This structure is used to transfer instruction data from the operand fetch unit to the dispatcher
@@ -72,29 +73,35 @@ func (s *processor) dispatcherUnit(
 
 			switch xuSel {
 			case xuBypassSel:
+				atomic.AddUint64((&s.Stats.Unit.Bypass), 1)
 				bypassOut <- in.b
 			case xuAdderSel:
+				atomic.AddUint64((&s.Stats.Unit.Adder), 1)
 				adderOut <- adderInput{
 					op: in.xuOper,
 					a:  in.a,
 					b:  in.b}
 			case xuLogicSel:
+				atomic.AddUint64((&s.Stats.Unit.Logic), 1)
 				logicOut <- logicInput{
 					op: in.xuOper,
 					a:  in.a,
 					b:  in.b}
 			case xuShiftSel:
+				atomic.AddUint64((&s.Stats.Unit.Shifter), 1)
 				shifterOut <- shifterInput{
 					op: in.xuOper,
 					a:  in.a,
 					b:  in.b}
 			case xuMemorySel:
+				atomic.AddUint64((&s.Stats.Unit.Memory), 1)
 				memoryOut <- memoryUnitInput{
 					op: in.xuOper,
 					a:  in.a,
 					b:  in.b,
 					c:  in.c}
 			case xuBranchSel:
+				atomic.AddUint64((&s.Stats.Unit.Branch), 1)
 				branchOut <- branchInput{
 					op: in.xuOper,
 					a:  in.a,

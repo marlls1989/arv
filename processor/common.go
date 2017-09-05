@@ -18,16 +18,29 @@ import (
 // Cancelled, Bubbles, Retired and Decoded are respectively counters of instructions and bubbles
 // cancelled due to branching; bubbles inserted due to pipeline hazards; instructions and bubbles
 // successfully retired and instructions fetched and decoded.
+
+type Stats struct {
+	Cancelled uint64
+	Bubbles   uint64
+	Retired   uint64
+	Decoded   uint64
+	Unit      struct {
+		Bypass  uint64
+		Adder   uint64
+		Logic   uint64
+		Shifter uint64
+		Memory  uint64
+		Branch  uint64
+	}
+}
+
 type processor struct {
 	start, quit chan struct{}
 	Memory      memory.Memory
 	regFile     regFile
 	StartPC     uint32
 	Debug       bool
-	Cancelled   uint64
-	Bubbles     uint64
-	Retired     uint64
-	Decoded     uint64
+	Stats       Stats
 }
 
 // Receives one or more values between 0 and 31 and encodes into a 32-bit

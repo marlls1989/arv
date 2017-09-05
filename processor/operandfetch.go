@@ -76,7 +76,7 @@ func (s *processor) operandFetchUnit(
 						if s.Debug {
 							log.Printf("Issuing bubble due to register lock %v", regAddr(lock))
 						}
-						atomic.AddUint64((&s.Bubbles), 1)
+						atomic.AddUint64((&s.Stats.Bubbles), 1)
 						dispatcherOut <- dispatcherInput{
 							valid:  valid,
 							pcAddr: pc,
@@ -113,7 +113,7 @@ func (s *processor) operandFetchUnit(
 						if s.Debug {
 							log.Printf("Issuing bubble due to register lock %v", regAddr(lock))
 						}
-						atomic.AddUint64((&s.Bubbles), 1)
+						atomic.AddUint64((&s.Stats.Bubbles), 1)
 						dispatcherOut <- dispatcherInput{
 							valid:  valid,
 							pcAddr: pc,
@@ -136,7 +136,7 @@ func (s *processor) operandFetchUnit(
 			case opFormatB, opFormatR:
 				for lock := range regLock {
 					if (uint32(regAaddr)&^lock == 0) || (uint32(regBaddr)&^lock == 0) {
-						atomic.AddUint64((&s.Bubbles), 1)
+						atomic.AddUint64((&s.Stats.Bubbles), 1)
 						if s.Debug {
 							log.Printf("Issuing bubble due to register lock %v", regAddr(lock))
 						}
