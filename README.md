@@ -1,7 +1,7 @@
 # ARV Go High-level Functional Model #
 
-The Asynchronous RISC-V (ARV) is a 7-stage superscalar asynchronous processor design.
-It is designed using Communicating Sequential Processes (CSP), a paradigm suitable for modelling asynchronous circuits abstracting handshake protocol and encoding details.
+The Asynchronous RISC-V (ARV) is a 7-stage superscalar asynchronous processor model described in the Go language.
+It employs principles based on Communicating Sequential Processes (CSP), a paradigm suitable for modelling asynchronous circuits, while abstracting handshake protocols and data encoding details. In this way, the model is suitable as a specification for either quasi-delay insensitive (QDI) or nundled-data (BD) implementations.
 
 This repository contains the ARV high-level model written in [The Go Programming Language](https://golang.org/), which features channels and goroutine CSP-based constructs.
 This model is used to develop the processor organisation, abstracting asynchronous specific design complexities.
@@ -56,7 +56,7 @@ For further options, including debug flags use:
 
 ## Version History
 
-* v1.0 - First release described in Marcos Sartori End of Term Work (In Brazilian Portuguese, this is called a "Trabalho de Conclusão de Curso" or TCC). The text of the TCC is in English.
+* v1.0 - First release described in Marcos Sartori End of Term Work (In Brazilian Portuguese, this is called a "Trabalho de Conclusï¿½o de Curso" or TCC). The text of the TCC is in English.
 
 ## Authors and License
 
