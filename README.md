@@ -60,6 +60,6 @@ For further options, including debug flags, use:
 
 ## Authors and License
 
-The project started as an End of Term Work by Marcos Luiggi Lemos Sartori <marcos.sartori@acad.pucrs.br> at the Pontifical Catholic University of Rio Grande do Sul (PUCRS), RS, Brazil. It was developed withing the Hardware Design Support Research Group (GAPH), advised by Prof. Ney Laert Vilar Calazans <ney.calazans@pucrs.br>.
+The project started as an End of Term Work by Marcos Luiggi Lemos Sartori <marcos.sartori@acad.pucrs.br> at the Pontifical Catholic University of Rio Grande do Sul (PUCRS), RS, Brazil. It was developed within the Hardware Design Support Research Group (GAPH), advised by Prof. Ney Laert Vilar Calazans <ney.calazans@pucrs.br>.
 
 This work is licensed under GPLv2.
