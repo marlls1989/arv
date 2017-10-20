@@ -56,10 +56,10 @@ For further options, including debug flags use:
 
 ## Version History
 
-* v1.0 - First release described in Marcos Sartori End of Term Project (In Brazilian Portuguese this is called a "Trabalho de Conclusão de Curso" or TCC). The text of the TCC is in English.
+* v1.0 - First release described in Marcos Sartori End of Term Work (In Brazilian Portuguese, this is called a "Trabalho de Conclusão de Curso" or TCC). The text of the TCC is in English.
 
 ## Authors and License
 
-This project started as an End of Term Project by Marcos Luiggi Lemos Sartori <marcos.sartori@acad.pucrs.br> at the Pontifical Catholic University of Rio Grande do Sul (PUCRS). It was developed withing the Hardware Design Support Research Group (GAPH), and was advised by Prof. Ney Laert Vilar Calazans <ney.calazans@pucrs.br>.
+The project started as an End of Term Work by Marcos Luiggi Lemos Sartori <marcos.sartori@acad.pucrs.br> at the Pontifical Catholic University of Rio Grande do Sul (PUCRS), RS, Brazil. It was developed withing the Hardware Design Support Research Group (GAPH), advised by Prof. Ney Laert Vilar Calazans <ney.calazans@pucrs.br>.
 
 This work is licensed under GPLv2.
