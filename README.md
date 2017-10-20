@@ -1,31 +1,31 @@
 # ARV Go High-level Functional Model #
 
-The Asynchronous RISC-V (ARV) is a 7-stage superscalar asynchronous processor model described in the Go language.
+The Asynchronous RISC-V (ARV) is a 7-stage superscalar asynchronous processor model.
 It employs principles based on Communicating Sequential Processes (CSP), a paradigm suitable for modelling asynchronous circuits, while abstracting handshake protocols and data encoding details. In this way, the model is suitable as a specification for either quasi-delay insensitive (QDI) or bundled-data (BD) implementations.
 
-This repository contains the ARV high-level model written in [The Go Programming Language](https://golang.org/), which features channels and goroutine CSP-based constructs.
-This model is used to develop the processor organisation, abstracting asynchronous specific design complexities.
+This repository contains the ARV high-level executable model written in [The Go Programming Language](https://golang.org/), which features channels and CSP-based goroutine constructs.
+The model describes the overall processor organisation, abstracting implementation details.
 
 ## Installation Instructions
 
-You will need the following packages installed before you start:
+Intallation requires the following packages:
 + Go (minimal version 1.7)
 + Git (to fetch dependencies and the latest version)
 + GNU Toolchain for RISC-V (for building example code)
 
-The instructions assume you are running a modern Unix-like environment, e.g. Linux or MacOS.
+Instructions assume the model runs under some current Unix-like environment, e.g. Linux or MacOS.
 
 Retrieve the latest version from the repository:
 
 	go get bitbucket.org/marcos_sartori/qdi-riscv
 
-If you are installing from a tarball release, untar the contents in `src/bitbucket.org/marcos_sartori/qdi-riscv` in your `$GOPATH` directory:
+If installing from a tarball release, untar the contents in `src/bitbucket.org/marcos_sartori/qdi-riscv` in your `$GOPATH` directory. An example set of commands to perform this is:
 
 	mkdir -p ${GOPATH}/src/bitbucket.org/marcos_sartori
 	tar -xvf qdi-riscv-1.0.tar.bz2 -C ${GOPATH}/src/bitbucket.org/marcos_sartori
 	go get bitbucket.org/marcos_sartori/qdi-riscv
 	
-In order to compile the code in `samplecode` and `riscv-tests` directories you first need to get [The GNU Toolchain for RISC-V](https://github.com/riscv/riscv-gnu-toolchain) dependencies before installing it:
+In order to compile the code in `samplecode` and `riscv-tests` directories it is first necessary to get and install [The GNU Toolchain for RISC-V](https://github.com/riscv/riscv-gnu-toolchain), as described in:
 
 	git clone --recursive https://github.com/riscv/riscv-gnu-toolchain
 	cd riscv-gnu-toolchain
@@ -36,21 +36,21 @@ In order to compile the code in `samplecode` and `riscv-tests` directories you f
 	
 ## Running Code in the Model
 
-After installing, you are ready to compile and run the included sample code:
+After completing the above installation, it is possible to compile and run the included sample code:
 
 	cd samplecode
 	make
 	qdi-riscv -memfile hanoi.bin
 
-You can use the code provided in the `samplecode` directory to write your own programs targeting the simulation platform.
-	
-To run the RISC-V Unit Test Suite use:
+The code provided in the `samplecode` directory is useful to write programs targeting the simulation platform.
+
+To run the RISC-V Unit Test Suite, use the command set below:
 
 	cd riscv-tests
 	make
 	qdi-riscv -memfile test.bin
 	
-For further options, including debug flags use:
+For further options, including debug flags, use:
 
 	qdi-riscv -v
 
