@@ -38,7 +38,7 @@ if __name__ == "__main__":
 
     stats = []
     for f in statfiles:
-        subprocess.call(['./qdi-riscv', '-memfile='+execname, '-statsfile='+f]+sys.argv[:3])
+        subprocess.call(['arm-model', '-memfile='+execname, '-statsfile='+f]+sys.argv[:3])
         stats.append(processYamlFile(f));
         
     count = 0

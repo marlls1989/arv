@@ -3,7 +3,7 @@
 .\#*
 
 memdump
-qdi-riscv
+arv
 .DS_Store
 *.o
 *.hex

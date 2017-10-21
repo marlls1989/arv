@@ -1,7 +1,7 @@
 package processor
 
 import (
-	"bitbucket.org/marcos_sartori/qdi-riscv/memory"
+	"github.com/marlls1989/arv/memory"
 )
 
 // This function instanciate a new processor unit

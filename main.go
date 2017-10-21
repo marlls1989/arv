@@ -1,10 +1,10 @@
 package main
 
 import (
-	"bitbucket.org/marcos_sartori/qdi-riscv/memory"
-	"bitbucket.org/marcos_sartori/qdi-riscv/processor"
 	"flag"
 	"fmt"
+	"github.com/marlls1989/arv/memory"
+	"github.com/marlls1989/arv/processor"
 	"gopkg.in/yaml.v2"
 	"log"
 	"os"

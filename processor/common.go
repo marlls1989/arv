@@ -2,7 +2,7 @@
 package processor
 
 import (
-	"bitbucket.org/marcos_sartori/qdi-riscv/memory"
+	"github.com/marlls1989/arv/memory"
 	"log"
 )
 

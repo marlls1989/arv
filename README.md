@@ -17,13 +17,7 @@ Instructions assume the model runs under some current Unix-like environment, e.g
 
 Retrieve the latest version from the repository:
 
-	go get bitbucket.org/marcos_sartori/qdi-riscv
-
-If installing from a tarball release, untar the contents in `src/bitbucket.org/marcos_sartori/qdi-riscv` in your `$GOPATH` directory. An example set of commands to perform this is:
-
-	mkdir -p ${GOPATH}/src/bitbucket.org/marcos_sartori
-	tar -xvf qdi-riscv-1.0.tar.bz2 -C ${GOPATH}/src/bitbucket.org/marcos_sartori
-	go get bitbucket.org/marcos_sartori/qdi-riscv
+	go get -u github.com/marlls1989/arv
 	
 In order to compile the code in `samplecode` and `riscv-tests` directories it is first necessary to get and install [The GNU Toolchain for RISC-V](https://github.com/riscv/riscv-gnu-toolchain), as described in:
 
@@ -40,7 +34,7 @@ After completing the above installation, it is possible to compile and run the i
 
 	cd samplecode
 	make
-	qdi-riscv -memfile hanoi.bin
+	arv -memfile hanoi.bin
 
 The code provided in the `samplecode` directory is useful to write programs targeting the simulation platform.
 
@@ -48,15 +42,20 @@ To run the RISC-V Unit Test Suite, use the command set below:
 
 	cd riscv-tests
 	make
-	qdi-riscv -memfile test.bin
+	arv -memfile test.bin
 	
 For further options, including debug flags, use:
 
-	qdi-riscv -v
+	arv -h
 
 ## Version History
 
-* v1.0 - First release described in Marcos Sartori End of Term Work (In Brazilian Portuguese, this is called a "Trabalho de Conclusao de Curso" or TCC). The text of the TCC is in English.
+* v1.0 - First release described in Sartori's End of Term Work (In Brazilian Portuguese, this is called a "Trabalho de Conclusao de Curso" or TCC). The text of the TCC is in English.
+* v1.1 - First public release on Github, the register write-back mechanism is simplified and new performance counters are introduced. A conference paper containing results extracted from this version was approved for publication in the [24th IEEE International Conference on Electronics, Circuits and Systems](http://icecs2017.org/).
+
+## Publications
+* SARTORI, M. L. L. ARV: Towards an Asynchronous Implementation of the RISC-V Architecture. End of Term Work. Computer Engineering - PUCRS, July 2017. 57p. (Presented and approved. Advisor: Ney Laert Vilar Calazans).
+* SARTORI, M. L. L.; CALAZANS, N. L. V. Go Functional Model for a RISC-V Asynchronous Organization - ARV. In: IEEE International Conference on Electronics, Circuits and Systems (ICECS'17), Batumi, 2017. Accepted for publication, final version in preparation.
 
 ## Authors and License
 
