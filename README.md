@@ -40,6 +40,8 @@ The code provided in the `samplecode` directory is useful to write programs targ
 
 To run the RISC-V Unit Test Suite, use the command set below:
 
+	git submodule init
+	git submodule update
 	cd riscv-tests
 	make
 	arv -memfile test.bin
