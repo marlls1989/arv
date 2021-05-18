@@ -108,7 +108,7 @@ func (m *memoryArray) ReadWritePort(
         x := a % 8
         elapsed := time.Now().Sub(startTime).Milliseconds()
         do = ((*[8]byte)(unsafe.Pointer(&elapsed)))[x:x+l]
-      } else if a+l < uint32(len(m.mem)) {
+      } else if a < 0x80000000 && a+l < uint32(len(m.mem)) {
         m.mux.Lock()
         do = m.mem[a : a+l]
         m.mux.Unlock()
